@@ -108,6 +108,9 @@ jobs:
           cache: pip
 
       - name: Install Pillow & generate icon
+        env:
+          PYTHONIOENCODING: utf-8
+          PYTHONUTF8: "1"
         run: |
           pip install --prefer-binary Pillow
           python assets/generate_icon.py

@@ -14,6 +14,14 @@ import sys
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
+# Windows CI 默认 cp1252 编码,打印中文会 UnicodeEncodeError
+# 强制 stdout/stderr 用 utf-8
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, ValueError):
+    pass
+
 
 ROOT = Path(__file__).resolve().parent
 SIZE = 1024
