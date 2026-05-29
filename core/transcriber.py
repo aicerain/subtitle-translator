@@ -25,6 +25,12 @@ class Segment:
     language: str = ""
 
 
+# 单段字幕最长持续时间(秒)
+# 现实中人说一句话很少超过 8 秒;Whisper 偶尔会把静默段也算进上一句的 end,
+# 导致一句话显示 30 秒甚至 30 分钟。超过此阈值的段会被截断。
+MAX_SEGMENT_DURATION = 12.0
+
+
 ProgressCb = Optional[Callable[[str, float], None]]
 
 
@@ -107,8 +113,12 @@ class FasterWhisperTranscriber(TranscriberBase):
             audio_path,
             language=lang_arg,
             beam_size=5,
-            vad_filter=True,                          # 自动跳过静音
+            vad_filter=True,
             vad_parameters=dict(min_silence_duration_ms=500),
+            # 关闭"基于上文条件采样":Whisper 默认开启后会用前一段输出做下一段提示,
+            # 大段静音/纯音乐场景下容易让一句话的 end 时间被拉到下一句的 start,
+            # 导致单段时长几十分钟。关掉后每段独立,稳定性大幅提升。
+            condition_on_previous_text=False,
         )
 
         detected_lang = info.language or source_language
@@ -125,6 +135,9 @@ class FasterWhisperTranscriber(TranscriberBase):
             if progress_cb and total_duration > 0:
                 frac = min(1.0, seg.end / total_duration)
                 progress_cb(f"识别中: {_fmt_time(seg.end)} / {_fmt_time(total_duration)}", frac)
+
+        # 后处理:截断异常长的段(Whisper 偶尔会把静默并入上一段)
+        result = _clip_long_segments(result, progress_cb)
 
         if progress_cb:
             progress_cb(f"识别完成,共 {len(result)} 段。检测语种: {detected_lang}", 1.0)
@@ -201,9 +214,41 @@ class OpenAIWhisperAPITranscriber(TranscriberBase):
                 start=0.0, end=0.0, text=resp.text.strip(), language=detected_lang
             ))
 
+        # 同样截断异常长的段(API 也可能输出超长段)
+        result = _clip_long_segments(result, progress_cb)
+
         if progress_cb:
             progress_cb(f"识别完成,共 {len(result)} 段。语种: {detected_lang}", 1.0)
         return result, detected_lang
+
+
+def _clip_long_segments(
+    segments: list[Segment],
+    progress_cb: ProgressCb = None,
+) -> list[Segment]:
+    """
+    把异常长的段截断到 MAX_SEGMENT_DURATION 秒。
+    现实中一句台词不会超过 8 秒,Whisper 偶尔输出几十秒甚至几十分钟的段(把静默
+    /纯音乐段并入上一句的 end)。这里硬截断,保证字幕显示时长合理。
+    """
+    clipped_count = 0
+    longest_before = 0.0
+    for seg in segments:
+        dur = seg.end - seg.start
+        if dur > longest_before:
+            longest_before = dur
+        if dur > MAX_SEGMENT_DURATION:
+            seg.end = seg.start + MAX_SEGMENT_DURATION
+            clipped_count += 1
+
+    if clipped_count > 0:
+        msg = (
+            f"⚠ 后处理:{clipped_count} 段时长异常(最长 {longest_before:.0f}s),"
+            f"已截断到 {MAX_SEGMENT_DURATION:.0f}s"
+        )
+        if progress_cb:
+            progress_cb(msg, -1)
+    return segments
 
 
 def _fmt_time(seconds: float) -> str:

@@ -110,7 +110,9 @@ def _segments_hash(segments: list[Segment]) -> str:
 # ============================================================
 
 def asr_fingerprint(config: dict, source_language: str) -> dict:
-    """ASR 命中条件:引擎、模型、计算精度、源语言都得一样"""
+    """ASR 命中条件:引擎、模型、计算精度、源语言都得一样。
+    asr_postproc_version:后处理规则版本号,改了截断/合并逻辑就 bump 一次,
+    让所有旧缓存自动失效。"""
     return {
         "asr_engine": config.get("asr_engine", "faster-whisper"),
         "whisper_model_size": config.get("whisper_model_size", "base"),
@@ -118,6 +120,7 @@ def asr_fingerprint(config: dict, source_language: str) -> dict:
         "whisper_device": config.get("whisper_device", "auto"),
         "openai_whisper_model": config.get("openai_whisper_model", "whisper-1"),
         "source_language": source_language,
+        "asr_postproc_version": 2,   # v2: 加了 condition_on_previous_text=False + 时长截断
     }
 
 
