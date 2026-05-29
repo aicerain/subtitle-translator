@@ -19,6 +19,13 @@ DEFAULT_CONFIG = {
     "whisper_device": "auto",         # auto / cpu / cuda
     "whisper_compute_type": "auto",   # auto / int8 / float16 / float32
 
+    # VAD(语音活动检测)— Whisper 的预处理,跳过静默段
+    # 关闭 = 处理全部音频(慢一点,但不会漏台词)
+    # threshold 越低越宽松(更容易把声音当成人声),默认 0.35
+    "whisper_vad_filter": True,
+    "whisper_vad_threshold": 0.35,
+    "whisper_vad_min_silence_ms": 2000,
+
     # OpenAI Whisper API 配置 (asr_engine = "openai-api" 时使用)
     "openai_whisper_api_key": "",
     "openai_whisper_base_url": "https://api.openai.com/v1",

@@ -154,6 +154,35 @@ class SettingsDialog(QDialog):
         hint.setProperty("role", "hint")
         hint.setWordWrap(True)
         lf.addRow(hint)
+
+        # ---- VAD (语音活动检测) ----
+        self.vad_filter_check = QCheckBox("启用 VAD(自动跳过纯音乐/静默段,加快识别)")
+        self.vad_filter_check.setChecked(bool(self.config.get("whisper_vad_filter", True)))
+        self.vad_filter_check.setToolTip(
+            "关闭 VAD = Whisper 处理全部音频,慢但不会漏台词\n"
+            "若发现字幕大段缺失(例如视频中间被跳过几十分钟),先试着调低阈值,再不行就关掉"
+        )
+        lf.addRow("VAD 过滤:", self.vad_filter_check)
+
+        from PyQt6.QtWidgets import QDoubleSpinBox
+        self.vad_threshold_spin = QDoubleSpinBox()
+        self.vad_threshold_spin.setRange(0.10, 0.95)
+        self.vad_threshold_spin.setSingleStep(0.05)
+        self.vad_threshold_spin.setDecimals(2)
+        self.vad_threshold_spin.setValue(float(self.config.get("whisper_vad_threshold", 0.35)))
+        self.vad_threshold_spin.setToolTip(
+            "VAD 阈值 0.10-0.95,越低越宽松(把'像声音的'也当人声),漏段时调低。默认 0.35"
+        )
+        lf.addRow("VAD 阈值:", self.vad_threshold_spin)
+
+        self.vad_min_silence_spin = QSpinBox()
+        self.vad_min_silence_spin.setRange(200, 5000)
+        self.vad_min_silence_spin.setSingleStep(100)
+        self.vad_min_silence_spin.setSuffix(" ms")
+        self.vad_min_silence_spin.setValue(int(self.config.get("whisper_vad_min_silence_ms", 2000)))
+        self.vad_min_silence_spin.setToolTip("连续静默 ≥ N 毫秒才切段,默认 2000")
+        lf.addRow("最小静默时长:", self.vad_min_silence_spin)
+
         v.addWidget(self.local_box)
 
         self.api_box = QGroupBox("OpenAI Whisper API 设置")
@@ -511,6 +540,9 @@ class SettingsDialog(QDialog):
         self.config["whisper_model_size"] = self.whisper_size.currentText()
         self.config["whisper_device"] = self.whisper_device.currentText()
         self.config["whisper_compute_type"] = self.whisper_compute.currentText()
+        self.config["whisper_vad_filter"] = self.vad_filter_check.isChecked()
+        self.config["whisper_vad_threshold"] = self.vad_threshold_spin.value()
+        self.config["whisper_vad_min_silence_ms"] = self.vad_min_silence_spin.value()
         self.config["openai_whisper_api_key"] = self.whisper_api_key.text().strip()
         self.config["openai_whisper_base_url"] = self.whisper_api_base.text().strip()
         self.config["openai_whisper_model"] = self.whisper_api_model.text().strip()

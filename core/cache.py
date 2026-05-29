@@ -110,7 +110,7 @@ def _segments_hash(segments: list[Segment]) -> str:
 # ============================================================
 
 def asr_fingerprint(config: dict, source_language: str) -> dict:
-    """ASR 命中条件:引擎、模型、计算精度、源语言都得一样。
+    """ASR 命中条件:引擎、模型、计算精度、源语言、VAD 参数都得一样。
     asr_postproc_version:后处理规则版本号,改了截断/合并逻辑就 bump 一次,
     让所有旧缓存自动失效。"""
     return {
@@ -120,7 +120,11 @@ def asr_fingerprint(config: dict, source_language: str) -> dict:
         "whisper_device": config.get("whisper_device", "auto"),
         "openai_whisper_model": config.get("openai_whisper_model", "whisper-1"),
         "source_language": source_language,
-        "asr_postproc_version": 2,   # v2: 加了 condition_on_previous_text=False + 时长截断
+        # VAD 参数也进 fingerprint,改了 VAD 自动失效缓存重新识别
+        "whisper_vad_filter": bool(config.get("whisper_vad_filter", True)),
+        "whisper_vad_threshold": float(config.get("whisper_vad_threshold", 0.35)),
+        "whisper_vad_min_silence_ms": int(config.get("whisper_vad_min_silence_ms", 2000)),
+        "asr_postproc_version": 3,   # v3: VAD 参数化 + threshold 0.5→0.35 + min_silence 500→2000
     }
 
 

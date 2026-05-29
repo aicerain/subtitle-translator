@@ -59,10 +59,16 @@ class FasterWhisperTranscriber(TranscriberBase):
         model_size: str = "base",
         device: str = "auto",
         compute_type: str = "auto",
+        vad_filter: bool = True,
+        vad_threshold: float = 0.35,
+        vad_min_silence_ms: int = 2000,
     ):
         self.model_size = model_size
         self.device = device
         self.compute_type = compute_type
+        self.vad_filter = vad_filter
+        self.vad_threshold = vad_threshold
+        self.vad_min_silence_ms = vad_min_silence_ms
         self._model = None
 
     def _load_model(self):
@@ -109,17 +115,35 @@ class FasterWhisperTranscriber(TranscriberBase):
         # faster-whisper 用 None 表示自动检测
         lang_arg = None if source_language == "auto" else source_language
 
+        # VAD 参数说明:
+        #   vad_filter=True  开启 VAD 预过滤(默认),自动跳过纯音乐/静默段
+        #   threshold=0.35   越低越宽松(把"可能是声音"的也当人声,避免漏台词)
+        #   min_silence_ms=2000  连续静默 ≥2s 才切段(避免相邻台词被合并)
+        # 如果用户视频丢段,可在设置里关闭 vad_filter,Whisper 会处理全部音频
+        vad_params = None
+        if self.vad_filter:
+            vad_params = dict(
+                threshold=float(self.vad_threshold),
+                min_silence_duration_ms=int(self.vad_min_silence_ms),
+            )
+
         segments_iter, info = model.transcribe(
             audio_path,
             language=lang_arg,
             beam_size=5,
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=500),
+            vad_filter=self.vad_filter,
+            vad_parameters=vad_params,
             # 关闭"基于上文条件采样":Whisper 默认开启后会用前一段输出做下一段提示,
-            # 大段静音/纯音乐场景下容易让一句话的 end 时间被拉到下一句的 start,
+            # 大段静音/纯音乐场景下容易让一句台词的 end 时间被拉到下一句的 start,
             # 导致单段时长几十分钟。关掉后每段独立,稳定性大幅提升。
             condition_on_previous_text=False,
         )
+
+        if progress_cb:
+            vad_desc = (f"VAD on (threshold={self.vad_threshold}, "
+                        f"min_silence={self.vad_min_silence_ms}ms)"
+                        if self.vad_filter else "VAD off (扫描全部音频)")
+            progress_cb(f"Whisper 配置: {vad_desc}", 0.0)
 
         detected_lang = info.language or source_language
         total_duration = info.duration or 1.0
@@ -274,4 +298,7 @@ def build_transcriber(config: dict) -> TranscriberBase:
         model_size=config.get("whisper_model_size", "base"),
         device=config.get("whisper_device", "auto"),
         compute_type=config.get("whisper_compute_type", "auto"),
+        vad_filter=bool(config.get("whisper_vad_filter", True)),
+        vad_threshold=float(config.get("whisper_vad_threshold", 0.35)),
+        vad_min_silence_ms=int(config.get("whisper_vad_min_silence_ms", 2000)),
     )
