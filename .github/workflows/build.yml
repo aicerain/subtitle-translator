@@ -6,7 +6,11 @@ on:
     tags: ['v*']
   pull_request:
     branches: [main]
-  workflow_dispatch:        # 手动触发
+  workflow_dispatch:
+
+# 关键:让 softprops/action-gh-release 能创建 Release
+permissions:
+  contents: write
 
 jobs:
   # ============================================================
@@ -30,20 +34,20 @@ jobs:
           cache: pip
 
       - name: Install Pillow (for icon generation)
-        run: pip install Pillow
+        run: pip install --prefer-binary Pillow
 
       - name: Generate app icon
         run: python assets/generate_icon.py
 
-      - name: Install ffmpeg (for app testing only — final users still need their own)
+      - name: Install ffmpeg + create-dmg (build dependencies)
         run: |
           brew install ffmpeg create-dmg
 
       - name: Install Python dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          python -m pip install --upgrade pip wheel
+          pip install --prefer-binary -r requirements.txt
+          pip install --prefer-binary pyinstaller
 
       - name: Make .icns
         run: |
@@ -76,6 +80,7 @@ jobs:
         with:
           files: dist/SubtitleTranslator-${{ steps.ver.outputs.version }}-macOS.dmg
           fail_on_unmatched_files: true
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -104,14 +109,23 @@ jobs:
 
       - name: Install Pillow & generate icon
         run: |
-          pip install Pillow
+          pip install --prefer-binary Pillow
           python assets/generate_icon.py
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies (prefer binary wheels)
+        shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pyinstaller
+          python -m pip install --upgrade pip wheel
+          # 拆开装 + 详细日志,定位失败
+          # 先装核心(PyQt6 + 翻译 SDK)
+          pip install --prefer-binary PyQt6 openai anthropic requests pysrt ffmpeg-python -v
+          # Whisper 系列体积大,单独装
+          pip install --prefer-binary faster-whisper -v
+          pip install --prefer-binary pyinstaller -v
+        continue-on-error: false
+
+      - name: Show installed packages (debug)
+        run: pip list
 
       - name: Build .exe via PyInstaller
         run: |
@@ -136,5 +150,6 @@ jobs:
         with:
           files: dist/SubtitleTranslator-${{ steps.ver.outputs.version }}-Windows-x64.zip
           fail_on_unmatched_files: true
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
