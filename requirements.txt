@@ -1,0 +1,23 @@
+# GUI 框架
+PyQt6>=6.5.0
+
+# 语音识别 - 本地
+faster-whisper>=1.0.0
+
+# 语音识别 - OpenAI API
+openai>=1.30.0
+
+# 翻译模型 SDK
+anthropic>=0.30.0
+
+# HTTP 请求 (用于自定义 OpenAI 兼容 API 和国内模型)
+requests>=2.31.0
+
+# 字幕文件处理
+pysrt>=1.1.2
+
+# FFmpeg Python 封装(可选,主要用 subprocess 调 ffmpeg)
+ffmpeg-python>=0.2.0
+
+# macOS Dock 名修正(让 Dock 不显示 python3.11)
+pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'

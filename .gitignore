@@ -1,0 +1,134 @@
+# =============================================================
+# Python
+# =============================================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+.installed.cfg
+MANIFEST
+
+# 虚拟环境
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# mypy / ruff
+.mypy_cache/
+.ruff_cache/
+
+# =============================================================
+# PyInstaller 构建产物
+# =============================================================
+build/
+dist/
+*.spec.bak
+__pyinstaller__/
+
+# =============================================================
+# 应用图标生成中间产物(保留源:assets/generate_icon.py)
+# =============================================================
+assets/icon_1024.png
+assets/icon.ico
+assets/icon.icns
+assets/icon.iconset/
+
+# =============================================================
+# 用户运行时数据(不该进仓库)
+# =============================================================
+*.srt
+*.ass
+*.vtt
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.webm
+*.flv
+*.wav
+*.mp3
+*.m4a
+
+# 临时 burn / preview 文件
+burn_*.srt
+burn_filter_*.txt
+subtitle_audio_*.wav
+subtitle_preview_*/
+
+# =============================================================
+# macOS
+# =============================================================
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+
+# =============================================================
+# Windows
+# =============================================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# =============================================================
+# Linux
+# =============================================================
+*~
+.directory
+.Trash-*
+
+# =============================================================
+# IDE
+# =============================================================
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+*.sublime-project
+*.sublime-workspace
+.project
+.pydevproject
+.settings/
+*.code-workspace
+
+# =============================================================
+# 日志 / 临时
+# =============================================================
+*.log
+*.tmp
+*.temp
+.cache/
+
+# =============================================================
+# 本地配置(API key 等敏感信息)
+# =============================================================
+.env
+.env.local
+.env.*.local
+config.local.json
+secrets.json
