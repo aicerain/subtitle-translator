@@ -288,13 +288,19 @@ class SubtitleWorker(QThread):
         else:
             mode = requested_mode   # translated 或 bilingual
 
-        # 文件名按模式区分
+        # 文件名按模式 + 语言代码区分
+        # 命名规范(与 SRT 和烧录视频统一):
+        #   仅原文:    video.<src>.srt / video.<src>.mp4         如 movie.en.mp4
+        #   仅译文:    video.<tgt>.srt / video.<tgt>.mp4         如 movie.zh.mp4
+        #   双语:      video.<src>-<tgt>.srt / video.<src>-<tgt>.mp4  如 movie.en-zh.mp4
+        #   软字幕兜底: video.<src>-<tgt>.softsub.mp4
         suffix_map = {
             "original":   f"{self.source_language if self.source_language != 'auto' else detected_lang}",
             "translated": f"{self.target_language}",
             "bilingual":  f"{detected_lang}-{self.target_language}",
         }
-        lang_suffix = suffix_map.get(mode, self.target_language)
+        self._lang_suffix = suffix_map.get(mode, self.target_language)   # 保存供烧录复用
+        lang_suffix = self._lang_suffix
         srt_filename = f"{video_name}.{lang_suffix}.srt"
         self._srt_path = str(out_dir / srt_filename)
         write_srt(self._srt_path, segments, translations, mode=mode)
@@ -326,7 +332,10 @@ class SubtitleWorker(QThread):
         burned_path = ""
         if self.burn:
             ext = Path(video).suffix or ".mp4"
-            burned_path = str(out_dir / f"{video_name}.subtitled{ext}")
+            # 命名:与 SRT 对齐,方便目录里按字母排序看到配对
+            #   video.en-zh.srt   <─ 字幕文件
+            #   video.en-zh.mp4   <─ 烧录后视频
+            burned_path = str(out_dir / f"{video_name}.{self._lang_suffix}{ext}")
             has_libass = video_utils.check_filter_available("subtitles")
 
             # 烧录回调:写日志的同时把烧录百分比映射到主进度条 (85→100)
@@ -389,9 +398,11 @@ class SubtitleWorker(QThread):
         self.finished_ok.emit(self._srt_path, burned_path)
 
     def _do_softmux(self, out_dir: Path, video_name: str, ext: str, video: str) -> str:
-        """软字幕兜底:不重新编码,秒级嵌入到 mp4 字幕轨"""
+        """软字幕兜底:不重新编码,秒级嵌入到 mp4 字幕轨。
+        命名:video.<langs>.softsub.mp4(加 softsub 后缀以区别硬字幕版本)"""
         self.stage_changed.emit("嵌入软字幕 (FFmpeg 无 libass)")
-        softsub_path = str(out_dir / f"{video_name}.softsub{ext}")
+        lang = getattr(self, "_lang_suffix", self.target_language)
+        softsub_path = str(out_dir / f"{video_name}.{lang}.softsub{ext}")
         video_utils.mux_subtitle(
             video_path=video,
             subtitle_path=self._srt_path,
