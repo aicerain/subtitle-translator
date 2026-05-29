@@ -169,9 +169,9 @@ class SettingsDialog(QDialog):
         self.vad_threshold_spin.setRange(0.10, 0.95)
         self.vad_threshold_spin.setSingleStep(0.05)
         self.vad_threshold_spin.setDecimals(2)
-        self.vad_threshold_spin.setValue(float(self.config.get("whisper_vad_threshold", 0.35)))
+        self.vad_threshold_spin.setValue(float(self.config.get("whisper_vad_threshold", 0.25)))
         self.vad_threshold_spin.setToolTip(
-            "VAD 阈值 0.10-0.95,越低越宽松(把'像声音的'也当人声),漏段时调低。默认 0.35"
+            "VAD 阈值 0.10-0.95,越低越宽松(把'像声音的'也当人声),漏段时调低。默认 0.25"
         )
         lf.addRow("VAD 阈值:", self.vad_threshold_spin)
 
