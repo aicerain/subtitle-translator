@@ -4,6 +4,77 @@
 
 ---
 
+## [0.2.0] — 2026-05-29
+
+围绕 v0.1.0 上线后用户反馈做的稳定性 / 可用性版本。重点解决 **Whisper 时间戳异常**、**VAD 漏识别**、**烧录输出命名**、**CI 构建**等问题。
+
+### ✨ 新增
+
+**语音识别**
+- VAD(语音活动检测)参数全部可配置:**`whisper_vad_filter` / `whisper_vad_threshold` / `whisper_vad_min_silence_ms`** 三个 config 字段
+- 设置对话框 → 🎙 语音识别 Tab 新增 VAD 配置 UI:
+  - 复选框开关启停
+  - QDoubleSpinBox 调阈值 (0.10-0.95)
+  - QSpinBox 调最小静默时长 (200-5000ms)
+- 启动 ASR 时日志清晰显示当前 VAD 配置状态(开启 / 阈值 / 静默时长)
+- **`condition_on_previous_text=False`** 默认关闭 Whisper 的"基于上文条件采样",避免长静音段污染下一段时间戳
+
+**字幕生成**
+- 烧录输出视频文件名按字幕模式 + ISO 语言代码命名,**与 SRT 文件命名对齐**:
+  - 仅原文: `video.en.mp4`
+  - 仅译文: `video.zh.mp4`
+  - 双字幕: `video.en-zh.mp4`
+  - 软字幕兜底: `video.en-zh.softsub.mp4`
+- 同名 .srt 和 .mp4 在文件管理器里**按字母排序紧挨**,VLC / IINA 等播放器自动加载字幕
+
+**打包发布**
+- GitHub Actions 工作流可用 — push 到 main 或推 tag 自动跨平台构建
+- macOS Apple Silicon DMG + Windows x64 ZIP 一键产出
+
+### 🐛 修复
+
+**Whisper 异常时间戳**
+- **单段时长 30+ 分钟 bug** — 现在硬截断到最长 12 秒,任何 Whisper 异常输出都会被 `_clip_long_segments()` 强制收敛
+- 关闭 `condition_on_previous_text` 让每段独立识别,**大幅降低**卡死循环和时间戳漂移
+
+**VAD 漏识别**
+- 默认 VAD threshold 从 **0.5 → 0.25**(逐步放宽两次,最终 0.25)
+- 默认 `min_silence_duration_ms` 从 **500ms → 2000ms**(避免相邻短句被合并)
+- 用户在动漫 / 电影 / 长 BGM 场景下不再大段丢字幕
+
+**缓存系统**
+- `asr_postproc_version` 从 v1 → v4(随后处理规则升级自动失效旧缓存)
+- VAD 三参数加入 fingerprint,**改 VAD 设置后自动重新识别**,不需手动清缓存
+
+**取消 / 黑屏**
+- 修复:用户在预览窗点取消后 UI 不重置,环形卡在 85% — 改 `return` 为 `raise CancelledError()`,触发 `cancelled` 信号正确清理 UI
+
+**烧录稳定性**
+- 修复:ffmpeg 烧录长视频时 stderr pipe 填满死锁 — 新增独立 stderr 排空线程,保留尾 200 行用于异常诊断
+- 修复:进度卡某个百分比 1 分钟以上时,加 60s 心跳消息 ⏳ 仍在处理...,避免误判为卡死
+- 烧录百分比去重,避免日志被 `烧录进度: 35%` 刷屏数百行
+
+**UI 时间显示**
+- 修复:**已用时 / ETA 全部显示 00:00 bug** — QTimer 每秒走表 + 烧录阶段独立 ETA 计算逻辑
+
+**日志体验**
+- 每条日志加 **`[HH:MM:SS]` 时间戳前缀**(等宽字体灰色,不抢主信息)
+- 日志区右键菜单 + "🔍 新窗口查看" 按钮 → 独立大窗口含搜索、复制、保存
+
+**CI 构建**
+- 修复:GITHUB_TOKEN 默认无写权限,Release 创建步骤 401 — 工作流顶部加 `permissions: contents: write`
+- 修复:Windows runner 默认 cp1252 编码,`generate_icon.py` 打印中文 UnicodeEncodeError — `sys.stdout.reconfigure(utf-8)` + workflow `PYTHONUTF8=1`
+- 修复:Windows 上 pip 装 requirements.txt 早期失败定位难 — 拆分为 4 个独立 pip install 步骤,`--prefer-binary` 强制用预编译 wheel
+
+### ⚠ 破坏性变更
+
+- 烧录输出文件名规则变了:从 `video.subtitled.mp4` → `video.en-zh.mp4` 这种。如果你有脚本依赖旧命名,需要更新
+- ASR 缓存全部失效:从 v0.1.0 升级到 v0.2.0,首次运行同视频会**重新识别**(因为 fingerprint version 升级)
+
+[0.2.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.2.0
+
+---
+
 ## [0.1.0] — 2026-05-29
 
 首个公开发布版本。

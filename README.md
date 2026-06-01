@@ -1,4 +1,4 @@
-# 字幕生成与翻译 v0.1.0
+# 字幕生成与翻译 v0.2.0
 
 > 从本地视频自动生成多语字幕的桌面应用,支持本地大模型、多家云端 LLM、烧录、双语字幕、阶段性缓存。
 
@@ -49,8 +49,8 @@
 
 | 平台 | 文件 |
 |---|---|
-| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.1.0.dmg` |
-| Windows 10/11 (64-bit) | `SubtitleTranslator-0.1.0-Setup.exe` 或 `SubtitleTranslator-0.1.0-portable.zip` |
+| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.2.0.dmg` |
+| Windows 10/11 (64-bit) | `SubtitleTranslator-0.2.0-Setup.exe` 或 `SubtitleTranslator-0.2.0-portable.zip` |
 
 **macOS 首次打开**:右键 → 打开(绕过未签名警告),或终端跑:
 ```bash
@@ -241,11 +241,11 @@ python main.py
 
 ### ❓ "已用时" / "预计剩余" 显示 `00:00`
 
-老 bug,v0.1.0 已修复(QTimer 每秒走表 + 烧录阶段独立 ETA)。
+老 bug,v0.2.0 已修复(QTimer 每秒走表 + 烧录阶段独立 ETA)。
 
 ### ❓ 烧录卡在某个百分比很久不动
 
-v0.1.0 已修复 stderr pipe 死锁问题。如果你看到 **`⏳ 仍在处理(已 60s 无新进度)`** 心跳消息,说明 ffmpeg 确实在跑只是慢。drawtext 模式下 1000+ 字幕本来就慢,建议装 ffmpeg-full 切到 libass 模式。
+v0.2.0 已修复 stderr pipe 死锁问题。如果你看到 **`⏳ 仍在处理(已 60s 无新进度)`** 心跳消息,说明 ffmpeg 确实在跑只是慢。drawtext 模式下 1000+ 字幕本来就慢,建议装 ffmpeg-full 切到 libass 模式。
 
 ### ❓ Mac Dock 显示 `python3.11` 不是应用名
 
@@ -283,7 +283,7 @@ chmod +x build_mac.sh
 1. 找到你 conda 环境
 2. 装 PyInstaller
 3. 用 `SubtitleTranslator.spec` 出 `dist/SubtitleTranslator.app`
-4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.1.0.dmg`
+4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.2.0.dmg`
 
 ### Windows 出 `.exe`
 
