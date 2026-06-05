@@ -132,3 +132,7 @@ $RECYCLE.BIN/
 .env.*.local
 config.local.json
 secrets.json
+
+# local junk
+_t
+.claude/

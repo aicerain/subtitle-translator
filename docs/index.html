@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>字幕生成与翻译 · Subtitle Generation &amp; Translation</title>
+<style>
+  :root {
+    --bg:#ffffff; --fg:#1f2328; --muted:#656d76; --border:#d0d7de;
+    --accent:#0969da; --code-bg:#f6f8fa; --row:#f6f8fa; --tab-bg:#f6f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:#0d1117; --fg:#e6edf3; --muted:#9198a1; --border:#30363d;
+      --accent:#4493f8; --code-bg:#161b22; --row:#161b22; --tab-bg:#161b22;
+    }
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--bg); color:var(--fg);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",
+      "Microsoft YaHei",Helvetica,Arial,sans-serif;
+    line-height:1.6; font-size:16px;
+  }
+  .wrap { max-width:980px; margin:0 auto; padding:32px 24px 80px; }
+  h1.page-title { font-size:1.9rem; margin:0 0 4px; }
+  .sub { color:var(--muted); margin:0 0 24px; }
+  .tabs { display:flex; gap:4px; border-bottom:2px solid var(--border); margin-bottom:28px; }
+  .tab {
+    appearance:none; border:none; background:transparent; cursor:pointer;
+    font-size:1rem; font-weight:600; color:var(--muted);
+    padding:10px 20px; border-radius:8px 8px 0 0; margin-bottom:-2px;
+    border-bottom:2px solid transparent;
+  }
+  .tab:hover { color:var(--fg); background:var(--tab-bg); }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); }
+  .panel { display:none; }
+  .panel.active { display:block; animation:fade .15s ease; }
+  @keyframes fade { from{opacity:0} to{opacity:1} }
+  h1,h2,h3 { line-height:1.3; }
+  h2 { border-bottom:1px solid var(--border); padding-bottom:.3em; margin-top:2em; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  code { background:var(--code-bg); padding:.2em .4em; border-radius:6px;
+    font-family:"SFMono-Regular",Consolas,monospace; font-size:.88em; }
+  pre { background:var(--code-bg); padding:14px 16px; border-radius:8px; overflow:auto; }
+  pre code { background:none; padding:0; }
+  table { border-collapse:collapse; width:100%; margin:16px 0; display:block; overflow:auto; }
+  th,td { border:1px solid var(--border); padding:8px 12px; text-align:left; }
+  th { background:var(--tab-bg); }
+  tr:nth-child(2n) td { background:var(--row); }
+  blockquote { margin:16px 0; padding:0 1em; color:var(--muted);
+    border-left:.25em solid var(--border); }
+  img { max-width:100%; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="page-title">字幕生成与翻译 · Subtitle Generation &amp; Translation <small>v0.2.0</small></h1>
+  <p class="sub">点击标签切换语言 · Click a tab to switch language</p>
+  <div class="tabs" role="tablist">
+    <button class="tab active" data-tab="zh" role="tab">🇨🇳 中文</button>
+    <button class="tab" data-tab="en" role="tab">🇬🇧 English</button>
+  </div>
+  <section id="zh" class="panel active" role="tabpanel">
+<blockquote>
+<p>从本地视频自动生成多语字幕的桌面应用,支持本地大模型、多家云端 LLM、烧录、双语字幕、阶段性缓存。</p>
+</blockquote>
+<p><img alt="icon" src="assets/icon_1024.png" /></p>
+<p>跨平台:<strong>macOS</strong> / <strong>Windows</strong> / <strong>Linux</strong>
+技术栈:<strong>PyQt6 + Faster-Whisper + FFmpeg</strong></p>
+<hr />
+<h2 id="_1">✨ 功能一览</h2>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎙 <strong>语音识别</strong></td>
+<td>本地 Faster-Whisper(免费/离线) 或 OpenAI Whisper API</td>
+</tr>
+<tr>
+<td>💬 <strong>多家翻译模型</strong></td>
+<td>OpenAI / Anthropic Claude / DeepSeek / 通义千问 / 智谱 GLM / LM Studio 本地 / 自定义 OpenAI 兼容 API</td>
+</tr>
+<tr>
+<td>🌍 <strong>17 种语言互译</strong></td>
+<td>中英日韩法德西俄葡意阿泰越印尼印地等</td>
+</tr>
+<tr>
+<td>📺 <strong>三种字幕模式</strong></td>
+<td>仅原文 / 仅译文 / 双字幕(原文在上,译文在下)</td>
+</tr>
+<tr>
+<td>✨ <strong>大模型原文润色</strong></td>
+<td>用 LLM 修 Whisper 标点/错字/幻觉,可选</td>
+</tr>
+<tr>
+<td>🔥 <strong>三级字幕烧录</strong></td>
+<td>libass 硬字幕 &gt; drawtext 硬字幕 &gt; 软字幕 mux,自动降级</td>
+</tr>
+<tr>
+<td>⚡ <strong>macOS 硬件加速</strong></td>
+<td>h264_videotoolbox 提速 5-10×</td>
+</tr>
+<tr>
+<td>💾 <strong>阶段性缓存</strong></td>
+<td>ASR/润色/翻译每个阶段产物落盘,崩溃/重启秒级恢复</td>
+</tr>
+<tr>
+<td>🛠 <strong>预览与手动编辑</strong></td>
+<td>字幕生成后可在表格里逐条编辑、合并、拆分、删除</td>
+</tr>
+<tr>
+<td>🌗 <strong>浅色/深色主题</strong></td>
+<td>切换瞬间生效,QPalette + QSS 双轨同步</td>
+</tr>
+<tr>
+<td>🚀 <strong>多线程并发翻译</strong></td>
+<td>云端 4 路并发,本地服务器自动串行</td>
+</tr>
+<tr>
+<td>🛡 <strong>极致健壮性</strong></td>
+<td>单批失败重试 → 逐条降级 → 保留原文;取消立即重置 UI</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="_2">📋 系统要求</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>macOS</th>
+<th>Windows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>系统</td>
+<td>macOS 11 (Big Sur) 及以上</td>
+<td>Windows 10/11 64-bit</td>
+</tr>
+<tr>
+<td>内存</td>
+<td>8 GB(<code>large-v3</code> 模型需 16 GB)</td>
+<td>8 GB</td>
+</tr>
+<tr>
+<td>硬盘</td>
+<td>5 GB(放模型 + 缓存)</td>
+<td>5 GB</td>
+</tr>
+<tr>
+<td>必装</td>
+<td><strong>FFmpeg-full</strong>(含 libass)</td>
+<td><strong>FFmpeg</strong>(含 libass)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Apple Silicon (M1/M2/M3) 用户:<strong>强烈推荐</strong> ffmpeg-full,可享受 <code>h264_videotoolbox</code> 硬件编码,烧录提速 5-10 倍。</p>
+</blockquote>
+<hr />
+<h2 id="_3">🚀 安装</h2>
+<h3 id="a">方式 A:下载预编译版(零依赖)</h3>
+<p>到 <a href="https://github.com/yourname/subtitle-translator/releases">Releases 页面</a> 下载对应安装包:</p>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>文件</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS (Apple Silicon / Intel)</td>
+<td><code>SubtitleTranslator-0.2.0.dmg</code></td>
+</tr>
+<tr>
+<td>Windows 10/11 (64-bit)</td>
+<td><code>SubtitleTranslator-0.2.0-Setup.exe</code> 或 <code>SubtitleTranslator-0.2.0-portable.zip</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>macOS 首次打开</strong>:右键 → 打开(绕过未签名警告),或终端跑:</p>
+<pre><code class="language-bash">xattr -dr com.apple.quarantine /Applications/SubtitleTranslator.app
+</code></pre>
+<p><strong>FFmpeg 仍需另装</strong>(应用不内嵌):
+- macOS: <code>brew install ffmpeg-full</code> 或 <code>brew install ffmpeg</code>
+- Windows: 下载 <a href="https://www.gyan.dev/ffmpeg/builds/">gyan.dev 的 ffmpeg-full</a>,解压后把 <code>bin/</code> 加入 PATH</p>
+<h3 id="b">方式 B:从源码运行(推荐开发者)</h3>
+<p>需要 <strong>Python 3.10+</strong> 和 conda/miniforge。</p>
+<pre><code class="language-bash">git clone https://github.com/yourname/subtitle-translator.git
+cd &quot;Subtitle Translation&quot;
+
+# macOS 一键脚本(自动建 conda 环境 + 装依赖)
+./setup_mac.sh
+
+# Windows(在 PowerShell)
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+</code></pre>
+<hr />
+<h2 id="_4">🎯 首次使用</h2>
+<h3 id="1">1️⃣ 配置至少一家翻译模型</h3>
+<p>打开应用 → <strong>设置 → API 与模型设置 → 💬 翻译模型</strong> Tab。<strong>侧边栏</strong>任选一家,填 API Key 和 Model 即可:</p>
+<table>
+<thead>
+<tr>
+<th>提供商</th>
+<th>推荐模型</th>
+<th>Base URL</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td><code>gpt-4o-mini</code></td>
+<td><code>https://api.openai.com/v1</code></td>
+<td>质量高,需付费</td>
+</tr>
+<tr>
+<td><strong>DeepSeek</strong></td>
+<td><code>deepseek-chat</code></td>
+<td><code>https://api.deepseek.com/v1</code></td>
+<td><strong>国产首选</strong>,1 元能翻几小时</td>
+</tr>
+<tr>
+<td><strong>Anthropic Claude</strong></td>
+<td><code>claude-sonnet-4-5</code></td>
+<td><code>https://api.anthropic.com</code></td>
+<td>中文翻译质量出众</td>
+</tr>
+<tr>
+<td><strong>通义千问</strong></td>
+<td><code>qwen-plus</code></td>
+<td><code>https://dashscope.aliyuncs.com/compatible-mode/v1</code></td>
+<td>国内访问最快</td>
+</tr>
+<tr>
+<td><strong>智谱 GLM</strong></td>
+<td><code>glm-4-flash</code></td>
+<td><code>https://open.bigmodel.cn/api/paas/v4</code></td>
+<td>有免费额度</td>
+</tr>
+<tr>
+<td><strong>LM Studio</strong>(本地)</td>
+<td>你下载的模型名</td>
+<td><code>http://127.0.0.1:1234/v1</code></td>
+<td>零成本,完全离线</td>
+</tr>
+<tr>
+<td><strong>自定义</strong></td>
+<td>任意</td>
+<td>任意 OpenAI 兼容 endpoint</td>
+<td>适配 Ollama/vLLM 等</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>配好后点 <strong>🔌 测试连接</strong> 验证。在该 provider 上点 <strong>设为默认</strong>。</p>
+</blockquote>
+<h3 id="2">2️⃣ 拖入视频开始</h3>
+<ol>
+<li>主界面 <strong>① 源文件</strong> 区域:<strong>拖入视频</strong>(或点浏览按钮)</li>
+<li>选 <strong>目标语言</strong>(默认中文简体)、<strong>字幕模式</strong>(双字幕推荐)</li>
+<li>视情况勾 <strong>用大模型润色原文</strong> / <strong>把字幕烧录到视频</strong></li>
+<li>点 <strong>右下角"开始生成字幕"</strong> 大蓝色按钮</li>
+</ol>
+<h3 id="3">3️⃣ 等待右侧仪表盘走完</h3>
+<pre><code>🎵 提取音频轨道 ✓
+🎙 语音转写 · Whisper ✓ (1071 段, 语种 en)
+🤖 大模型润色校对 ✓
+💬 翻译字幕 ✓ (16 批已完成)
+🔥 烧录到视频 (libass) 87%
+</code></pre>
+<hr />
+<h2 id="_5">📚 进阶用法</h2>
+<h3 id="_6">🗂 字幕模式三选一</h3>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>输出</th>
+<th>适用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>仅原语言</strong></td>
+<td>原文 SRT</td>
+<td>已有英文视频,想要 .srt 文件</td>
+</tr>
+<tr>
+<td><strong>仅目标语言</strong></td>
+<td>中文 SRT</td>
+<td>给视频配中文字幕</td>
+</tr>
+<tr>
+<td><strong>双字幕</strong></td>
+<td>原文在上,译文在下</td>
+<td>学习英语/英语学习视频(推荐)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="_7">✨ 原文润色(可选)</h3>
+<p>勾选 <strong>「用大模型润色原文」</strong>:
+- LLM 不翻译,只<strong>修 Whisper 出错的标点 / 同音字 / "感谢观看" 这类幻觉</strong>
+- 多花一次 LLM 调用,几分钱
+- 双字幕模式下,原文质量明显提升</p>
+<h3 id="_8">🔥 字幕烧录三级降级</h3>
+<p>应用根据 FFmpeg 编译选项<strong>自动</strong>选最佳烧录方式:</p>
+<pre><code>🥇 libass 硬字幕 — 需 ffmpeg-full(brew install ffmpeg-full)
+   ✓ 真正的 ASS 渲染,描边/字体/位置全可控
+   ✓ 配合 videotoolbox 硬件编码,42 分钟 1080p 视频 10 分钟搞定
+
+🥈 drawtext 硬字幕 — 仅需基础 FFmpeg
+   ✓ 不依赖 libass,任何 ffmpeg 都能用
+   ⚠ 1000+ 字幕场景下计算密集,慢但稳定
+
+🥉 软字幕 mov_text — 不重新编码
+   ✓ 秒级完成,文件大小几乎不变
+   ⚠ 需播放器开启字幕轨(IINA / VLC 自动显示)
+</code></pre>
+<h3 id="_9">💾 阶段性缓存</h3>
+<p>每个视频按内容哈希得到一个 ID,<strong>ASR / 润色 / 翻译三个昂贵阶段</strong>的结果自动缓存到 <code>~/.subtitle_translator/cache/&lt;video_id&gt;/</code>。</p>
+<ul>
+<li>✓ <strong>重复处理同一视频</strong>:秒级恢复,跳过 Whisper(可能省 30 分钟)</li>
+<li>✓ <strong>改字幕模式后重跑</strong>:翻译缓存命中,只重写 SRT</li>
+<li>✓ <strong>崩溃 / 取消后再跑</strong>:从最后完成的阶段继续</li>
+</ul>
+<p>菜单 <strong>设置 → 查看缓存</strong> 可看占用,<strong>清除所有缓存</strong>清理盘空间。</p>
+<h3 id="_10">🛠 预览与手动编辑</h3>
+<p>字幕生成完毕 → 预览窗口:</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>点击字幕条目</strong></td>
+<td>左侧画面跳到对应时间(关键帧)</td>
+</tr>
+<tr>
+<td><strong>双击 / Enter</strong></td>
+<td>编辑文本</td>
+</tr>
+<tr>
+<td><strong>⤓ 合并选中</strong></td>
+<td>多行合并为 1 行</td>
+</tr>
+<tr>
+<td><strong>⇆ 拆分当前条</strong></td>
+<td>按字符位置拆成 2 行</td>
+</tr>
+<tr>
+<td><strong>✕ 删除选中</strong></td>
+<td>移除多余条目</td>
+</tr>
+<tr>
+<td><strong>🔄 重新提帧</strong></td>
+<td>重新加载关键帧画面</td>
+</tr>
+</tbody>
+</table>
+<p>完成后点 <strong>「保存编辑并继续」</strong> → 后续烧录使用编辑后的版本。</p>
+<h3 id="_11">🌗 主题切换</h3>
+<p><strong>设置 → 主题 → 🌞 浅色 / 🌙 深色</strong>。瞬间切换,<strong>保存到配置</strong>,下次启动自动恢复。</p>
+<h3 id="asr">🎙 ASR 模型大小选择</h3>
+<p><strong>设置 → 语音识别 → 模型大小</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>体积</th>
+<th>速度 (相对实时)</th>
+<th>准确度</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tiny</code></td>
+<td>75 MB</td>
+<td>~10×</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><code>base</code></td>
+<td>140 MB</td>
+<td>~5×</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong><code>small</code></strong></td>
+<td>460 MB</td>
+<td>~3×</td>
+<td>⭐⭐⭐⭐(推荐)</td>
+</tr>
+<tr>
+<td><code>medium</code></td>
+<td>1.5 GB</td>
+<td>~1.5×</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><code>large-v3</code></td>
+<td>3 GB</td>
+<td>~0.7×</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>首次使用某模型时自动从 Hugging Face 下载</strong>到 <code>~/.cache/huggingface/</code>,后续启动直接加载。</p>
+<h3 id="_12">🚀 翻译并发与批次</h3>
+<p><strong>自适应批处理</strong>:
+- 单批最多 50 条(<code>translator_batch_size</code>)
+- 或字符数到 4000 提前切批(<code>translator_max_batch_chars</code>)
+- 云端默认 <strong>4 路并发</strong>(<code>translator_parallel_workers</code>)
+- 本地服务器(LM Studio / Ollama)<strong>自动降为 1 路</strong>(单模型无法真并行)</p>
+<p>90 分钟视频 800 段字幕 → 优化前 27 批 × 串行,优化后 <strong>16 批 × 4 并发,总耗时降到 1/6</strong>。</p>
+<h3 id="_13">🔍 日志查看</h3>
+<p>主界面右下日志区<strong>右键菜单</strong>或点 <strong>「🔍 新窗口查看」</strong> 打开独立窗口:
+- 顶部搜索栏,回车跳到下一个匹配
+- ↑↓ 上下查找
+- 自动滚到底部开关
+- 复制全部 / 保存到 .txt / 清空</p>
+<p>每条日志前有 <strong><code>[HH:MM:SS]</code></strong> 时间戳。</p>
+<hr />
+<h2 id="_14">🛠 故障排除</h2>
+<h3 id="ffmpeg">❓ FFmpeg 找不到</h3>
+<pre><code>[环境警告] 未找到 FFmpeg
+</code></pre>
+<p><strong>macOS</strong>:<code>brew install ffmpeg-full</code>(完整版,含 libass)或 <code>brew install ffmpeg</code>(精简版)
+<strong>Windows</strong>:<a href="https://www.gyan.dev/ffmpeg/builds/">下载 ffmpeg</a>,解压把 <code>bin/</code> 加 PATH</p>
+<h3 id="_15">❓ 烧录字幕显示乱码 / 方块</h3>
+<p>字体不支持中文。<strong>设置 → 字幕样式 → 字体名</strong>:
+- macOS:<code>PingFang SC</code>
+- Windows:<code>Microsoft YaHei</code> 或 <code>SimHei</code></p>
+<h3 id="lm-studio-tree_reduce">❓ LM Studio 第二批翻译失败 <code>tree_reduce</code> 错误</h3>
+<p>你的 Qwen3 / DeepSeek-R1 等<strong>思考型模型</strong>不适合批量翻译。换 <code>qwen2.5-7b-instruct</code> 这种非思考模型,或者去 LM Studio 关掉思考模式。</p>
+<h3 id="0000">❓ "已用时" / "预计剩余" 显示 <code>00:00</code></h3>
+<p>老 bug,v0.2.0 已修复(QTimer 每秒走表 + 烧录阶段独立 ETA)。</p>
+<h3 id="_16">❓ 烧录卡在某个百分比很久不动</h3>
+<p>v0.2.0 已修复 stderr pipe 死锁问题。如果你看到 <strong><code>⏳ 仍在处理(已 60s 无新进度)</code></strong> 心跳消息,说明 ffmpeg 确实在跑只是慢。drawtext 模式下 1000+ 字幕本来就慢,建议装 ffmpeg-full 切到 libass 模式。</p>
+<h3 id="mac-dock-python311">❓ Mac Dock 显示 <code>python3.11</code> 不是应用名</h3>
+<p>跑源码模式下,装 pyobjc:</p>
+<pre><code class="language-bash">pip install pyobjc-framework-Cocoa
+</code></pre>
+<p>打包成 <code>.app</code> 后无此问题。</p>
+<h3 id="api-401">❓ 翻译 API 报 401 / 余额不足</h3>
+<p>打开 <strong>设置 → 翻译模型</strong>,选你那家,点 <strong>🔌 测试连接</strong>。错误信息会显示具体原因。</p>
+<h3 id="_17">❓ 同一视频处理过一次,再跑很慢</h3>
+<p>应该秒级 ASR 缓存命中,如果还慢可能是:
+1. 视频内容变了(重新剪辑)→ ID 不同 → 重新跑
+2. 改了 Whisper 模型 → fingerprint 不匹配 → 重新跑</p>
+<p>菜单 <strong>设置 → 查看缓存</strong> 确认是否命中。</p>
+<hr />
+<h2 id="_18">📦 自己打包</h2>
+<h3 id="macos-app-dmg">macOS 出 <code>.app</code> + <code>.dmg</code></h3>
+<pre><code class="language-bash">chmod +x build_mac.sh
+./build_mac.sh
+</code></pre>
+<p>脚本自动:
+1. 找到你 conda 环境
+2. 装 PyInstaller
+3. 用 <code>SubtitleTranslator.spec</code> 出 <code>dist/SubtitleTranslator.app</code>
+4. 调 <code>create_dmg.sh</code> 打成 <code>dist/SubtitleTranslator-0.2.0.dmg</code></p>
+<h3 id="windows-exe">Windows 出 <code>.exe</code></h3>
+<pre><code class="language-cmd">build_windows.bat
+</code></pre>
+<p>输出在 <code>dist\SubtitleTranslator\SubtitleTranslator.exe</code>。可以打包文件夹分发,或用 NSIS / Inno Setup 做安装程序。</p>
+<h3 id="github-ci">推送到 GitHub 自动 CI 出包</h3>
+<p>仓库已有 <code>.github/workflows/build.yml</code>,push 到 main 分支时:
+- macOS runner 跑 <code>build_mac.sh</code> 出 <code>.dmg</code>
+- Windows runner 跑 <code>build_windows.bat</code> 出 <code>.zip</code>
+- 在 Actions 页面下载产物</p>
+<hr />
+<h2 id="_19">🤝 配置文件位置</h2>
+<table>
+<thead>
+<tr>
+<th>平台</th>
+<th>路径</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS / Linux</td>
+<td><code>~/.subtitle_translator/config.json</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>%USERPROFILE%\.subtitle_translator\config.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>包含:API keys、Whisper 模型选择、主题、所有 UI 状态。</p>
+<p><strong>缓存</strong>:<code>~/.subtitle_translator/cache/&lt;video_id&gt;/</code>
+<strong>check 图标</strong>:<code>~/.subtitle_translator/check_white.png</code></p>
+<hr />
+<h2 id="license">📜 License</h2>
+<p>MIT — 见 <a href="LICENSE">LICENSE</a></p>
+<hr />
+<h2 id="_20">🙏 致谢</h2>
+<ul>
+<li><a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a> — Whisper 高速推理</li>
+<li><a href="https://ffmpeg.org/">FFmpeg</a> — 视频处理全能选手</li>
+<li><a href="https://github.com/libass/libass">libass</a> — 字幕渲染</li>
+<li><a href="https://riverbankcomputing.com/software/pyqt/">PyQt6</a> — 跨平台 GUI</li>
+<li>各位 LLM API 提供商 — OpenAI / Anthropic / DeepSeek / 阿里 / 智谱 / 等</li>
+</ul>
+<hr />
+<h2 id="_21">📞 反馈</h2>
+<ul>
+<li>Issues:<a href="https://github.com/yourname/subtitle-translator/issues">github.com/yourname/subtitle-translator/issues</a></li>
+<li>Discussions:<a href="https://github.com/yourname/subtitle-translator/discussions">github.com/yourname/subtitle-translator/discussions</a></li>
+</ul>
+<p>Made with ❤️ for the open-source community.</p>
+  </section>
+  <section id="en" class="panel" role="tabpanel">
+<blockquote>
+<p>A desktop app that automatically generates multilingual subtitles from local videos — with local LLMs, multiple cloud LLM providers, burn-in, bilingual subtitles, and staged caching.</p>
+</blockquote>
+<p><img alt="icon" src="assets/icon_1024.png" /></p>
+<p>Cross-platform: <strong>macOS</strong> / <strong>Windows</strong> / <strong>Linux</strong>
+Tech stack: <strong>PyQt6 + Faster-Whisper + FFmpeg</strong></p>
+<hr />
+<h2 id="features-at-a-glance">✨ Features at a Glance</h2>
+<table>
+<thead>
+<tr>
+<th>Feature</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>🎙 <strong>Speech recognition</strong></td>
+<td>Local Faster-Whisper (free/offline) or OpenAI Whisper API</td>
+</tr>
+<tr>
+<td>💬 <strong>Multiple translation models</strong></td>
+<td>OpenAI / Anthropic Claude / DeepSeek / Qwen / Zhipu GLM / LM Studio (local) / any OpenAI-compatible API</td>
+</tr>
+<tr>
+<td>🌍 <strong>17 languages, any-to-any</strong></td>
+<td>Chinese, English, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Italian, Arabic, Thai, Vietnamese, Indonesian, Hindi, and more</td>
+</tr>
+<tr>
+<td>📺 <strong>Three subtitle modes</strong></td>
+<td>Source only / Translation only / Bilingual (source on top, translation below)</td>
+</tr>
+<tr>
+<td>✨ <strong>LLM source polishing</strong></td>
+<td>Use an LLM to fix Whisper punctuation/typos/hallucinations — optional</td>
+</tr>
+<tr>
+<td>🔥 <strong>Three-tier burn-in</strong></td>
+<td>libass hardsub &gt; drawtext hardsub &gt; softsub mux, with automatic fallback</td>
+</tr>
+<tr>
+<td>⚡ <strong>macOS hardware acceleration</strong></td>
+<td>h264_videotoolbox, 5–10× faster</td>
+</tr>
+<tr>
+<td>💾 <strong>Staged caching</strong></td>
+<td>Each stage (ASR/polish/translation) is written to disk — recover from crashes/restarts in seconds</td>
+</tr>
+<tr>
+<td>🛠 <strong>Preview &amp; manual editing</strong></td>
+<td>Edit, merge, split, or delete subtitles line by line after generation</td>
+</tr>
+<tr>
+<td>🌗 <strong>Light/Dark themes</strong></td>
+<td>Instant switching, synced across QPalette + QSS</td>
+</tr>
+<tr>
+<td>🚀 <strong>Multithreaded translation</strong></td>
+<td>4-way concurrency in the cloud, automatic serial mode for local servers</td>
+</tr>
+<tr>
+<td>🛡 <strong>Extreme robustness</strong></td>
+<td>Batch retry → per-line fallback → keep source text; cancel instantly resets the UI</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="system-requirements">📋 System Requirements</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>macOS</th>
+<th>Windows</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>OS</td>
+<td>macOS 11 (Big Sur) or later</td>
+<td>Windows 10/11 64-bit</td>
+</tr>
+<tr>
+<td>RAM</td>
+<td>8 GB (16 GB for the <code>large-v3</code> model)</td>
+<td>8 GB</td>
+</tr>
+<tr>
+<td>Disk</td>
+<td>5 GB (models + cache)</td>
+<td>5 GB</td>
+</tr>
+<tr>
+<td>Required</td>
+<td><strong>FFmpeg-full</strong> (with libass)</td>
+<td><strong>FFmpeg</strong> (with libass)</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Apple Silicon (M1/M2/M3) users: <strong>ffmpeg-full is strongly recommended</strong> to enable <code>h264_videotoolbox</code> hardware encoding — 5–10× faster burn-in.</p>
+</blockquote>
+<hr />
+<h2 id="installation">🚀 Installation</h2>
+<h3 id="option-a-download-a-prebuilt-release-zero-dependencies">Option A: Download a prebuilt release (zero dependencies)</h3>
+<p>Download the right package from the <a href="https://github.com/yourname/subtitle-translator/releases">Releases page</a>:</p>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>File</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS (Apple Silicon / Intel)</td>
+<td><code>SubtitleTranslator-0.2.0.dmg</code></td>
+</tr>
+<tr>
+<td>Windows 10/11 (64-bit)</td>
+<td><code>SubtitleTranslator-0.2.0-Setup.exe</code> or <code>SubtitleTranslator-0.2.0-portable.zip</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>First launch on macOS</strong>: right-click → Open (to bypass the unsigned-app warning), or run in Terminal:</p>
+<pre><code class="language-bash">xattr -dr com.apple.quarantine /Applications/SubtitleTranslator.app
+</code></pre>
+<p><strong>FFmpeg must still be installed separately</strong> (it is not bundled):
+- macOS: <code>brew install ffmpeg-full</code> or <code>brew install ffmpeg</code>
+- Windows: download <a href="https://www.gyan.dev/ffmpeg/builds/">ffmpeg-full from gyan.dev</a>, unzip, and add <code>bin/</code> to your PATH</p>
+<h3 id="option-b-run-from-source-recommended-for-developers">Option B: Run from source (recommended for developers)</h3>
+<p>Requires <strong>Python 3.10+</strong> and conda/miniforge.</p>
+<pre><code class="language-bash">git clone https://github.com/yourname/subtitle-translator.git
+cd &quot;Subtitle Translation&quot;
+
+# macOS one-click script (creates conda env + installs deps)
+./setup_mac.sh
+
+# Windows (in PowerShell)
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+</code></pre>
+<hr />
+<h2 id="first-run">🎯 First Run</h2>
+<h3 id="1-configure-at-least-one-translation-model">1️⃣ Configure at least one translation model</h3>
+<p>Open the app → <strong>Settings → API &amp; Model Settings → 💬 Translation Models</strong> tab. Pick any provider from the <strong>sidebar</strong> and fill in the API Key and Model:</p>
+<table>
+<thead>
+<tr>
+<th>Provider</th>
+<th>Recommended model</th>
+<th>Base URL</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>OpenAI</strong></td>
+<td><code>gpt-4o-mini</code></td>
+<td><code>https://api.openai.com/v1</code></td>
+<td>High quality, paid</td>
+</tr>
+<tr>
+<td><strong>DeepSeek</strong></td>
+<td><code>deepseek-chat</code></td>
+<td><code>https://api.deepseek.com/v1</code></td>
+<td><strong>Top China pick</strong> — ¥1 covers hours of translation</td>
+</tr>
+<tr>
+<td><strong>Anthropic Claude</strong></td>
+<td><code>claude-sonnet-4-5</code></td>
+<td><code>https://api.anthropic.com</code></td>
+<td>Outstanding Chinese translation quality</td>
+</tr>
+<tr>
+<td><strong>Qwen</strong></td>
+<td><code>qwen-plus</code></td>
+<td><code>https://dashscope.aliyuncs.com/compatible-mode/v1</code></td>
+<td>Fastest access in mainland China</td>
+</tr>
+<tr>
+<td><strong>Zhipu GLM</strong></td>
+<td><code>glm-4-flash</code></td>
+<td><code>https://open.bigmodel.cn/api/paas/v4</code></td>
+<td>Has a free tier</td>
+</tr>
+<tr>
+<td><strong>LM Studio</strong> (local)</td>
+<td>the model name you downloaded</td>
+<td><code>http://127.0.0.1:1234/v1</code></td>
+<td>Zero cost, fully offline</td>
+</tr>
+<tr>
+<td><strong>Custom</strong></td>
+<td>anything</td>
+<td>any OpenAI-compatible endpoint</td>
+<td>Works with Ollama/vLLM, etc.</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>After configuring, click <strong>🔌 Test Connection</strong> to verify. Click <strong>Set as Default</strong> on your chosen provider.</p>
+</blockquote>
+<h3 id="2-drop-in-a-video-to-start">2️⃣ Drop in a video to start</h3>
+<ol>
+<li>In the <strong>① Source File</strong> area of the main window: <strong>drag in a video</strong> (or click Browse)</li>
+<li>Choose the <strong>target language</strong> (Simplified Chinese by default) and <strong>subtitle mode</strong> (bilingual recommended)</li>
+<li>Optionally check <strong>Polish source with LLM</strong> / <strong>Burn subtitles into video</strong></li>
+<li>Click the big blue <strong>"Start Generating Subtitles"</strong> button at the bottom right</li>
+</ol>
+<h3 id="3-watch-the-dashboard-on-the-right-finish">3️⃣ Watch the dashboard on the right finish</h3>
+<pre><code>🎵 Extracting audio track ✓
+🎙 Speech transcription · Whisper ✓ (1071 segments, language en)
+🤖 LLM polishing &amp; proofreading ✓
+💬 Translating subtitles ✓ (16 batches done)
+🔥 Burning into video (libass) 87%
+</code></pre>
+<hr />
+<h2 id="advanced-usage">📚 Advanced Usage</h2>
+<h3 id="pick-one-of-three-subtitle-modes">🗂 Pick one of three subtitle modes</h3>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Output</th>
+<th>Best for</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Source only</strong></td>
+<td>source-language SRT</td>
+<td>You already have an English video and just want the .srt file</td>
+</tr>
+<tr>
+<td><strong>Target only</strong></td>
+<td>Chinese SRT</td>
+<td>Adding Chinese subtitles to a video</td>
+</tr>
+<tr>
+<td><strong>Bilingual</strong></td>
+<td>source on top, translation below</td>
+<td>Language learning / English-study videos (recommended)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="source-polishing-optional">✨ Source polishing (optional)</h3>
+<p>Check <strong>"Polish source with LLM"</strong>:
+- The LLM does not translate — it only <strong>fixes Whisper's punctuation / homophones / hallucinations like "thanks for watching"</strong>
+- Costs one extra LLM call, a few cents
+- Noticeably improves source quality in bilingual mode</p>
+<h3 id="three-tier-burn-in-fallback">🔥 Three-tier burn-in fallback</h3>
+<p>The app <strong>automatically</strong> picks the best burn-in method based on your FFmpeg build:</p>
+<pre><code>🥇 libass hardsub — needs ffmpeg-full (brew install ffmpeg-full)
+   ✓ True ASS rendering — full control over outline / font / position
+   ✓ With videotoolbox hardware encoding, a 42-min 1080p video finishes in 10 min
+
+🥈 drawtext hardsub — only needs basic FFmpeg
+   ✓ No libass dependency, works with any ffmpeg
+   ⚠ Compute-heavy with 1000+ subtitles — slow but stable
+
+🥉 softsub mov_text — no re-encoding
+   ✓ Finishes in seconds, file size barely changes
+   ⚠ Requires enabling the subtitle track in your player (IINA / VLC show it automatically)
+</code></pre>
+<h3 id="staged-caching">💾 Staged caching</h3>
+<p>Each video gets an ID from a content hash, and results from the <strong>three expensive stages (ASR / polish / translation)</strong> are automatically cached to <code>~/.subtitle_translator/cache/&lt;video_id&gt;/</code>.</p>
+<ul>
+<li>✓ <strong>Reprocessing the same video</strong>: recovers in seconds, skips Whisper (can save 30 minutes)</li>
+<li>✓ <strong>Rerunning after changing subtitle mode</strong>: translation cache hits, only the SRT is rewritten</li>
+<li>✓ <strong>Rerunning after a crash / cancel</strong>: resumes from the last completed stage</li>
+</ul>
+<p>The menu <strong>Settings → View Cache</strong> shows usage; <strong>Clear All Cache</strong> frees disk space.</p>
+<h3 id="preview-manual-editing">🛠 Preview &amp; manual editing</h3>
+<p>After generation finishes → the preview window:</p>
+<table>
+<thead>
+<tr>
+<th>Action</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Click a subtitle row</strong></td>
+<td>Jumps the left preview to the matching time (keyframe)</td>
+</tr>
+<tr>
+<td><strong>Double-click / Enter</strong></td>
+<td>Edit the text</td>
+</tr>
+<tr>
+<td><strong>⤓ Merge selected</strong></td>
+<td>Combine multiple lines into one</td>
+</tr>
+<tr>
+<td><strong>⇆ Split current</strong></td>
+<td>Split into two lines at a character position</td>
+</tr>
+<tr>
+<td><strong>✕ Delete selected</strong></td>
+<td>Remove unwanted rows</td>
+</tr>
+<tr>
+<td><strong>🔄 Refresh frame</strong></td>
+<td>Reload the keyframe image</td>
+</tr>
+</tbody>
+</table>
+<p>When done, click <strong>"Save Edits &amp; Continue"</strong> → burn-in uses the edited version.</p>
+<h3 id="theme-switching">🌗 Theme switching</h3>
+<p><strong>Settings → Theme → 🌞 Light / 🌙 Dark</strong>. Switches instantly, <strong>saved to config</strong>, and restored on next launch.</p>
+<h3 id="choosing-an-asr-model-size">🎙 Choosing an ASR model size</h3>
+<p><strong>Settings → Speech Recognition → Model Size</strong>:</p>
+<table>
+<thead>
+<tr>
+<th>Model</th>
+<th>Size</th>
+<th>Speed (relative to realtime)</th>
+<th>Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>tiny</code></td>
+<td>75 MB</td>
+<td>~10×</td>
+<td>⭐⭐</td>
+</tr>
+<tr>
+<td><code>base</code></td>
+<td>140 MB</td>
+<td>~5×</td>
+<td>⭐⭐⭐</td>
+</tr>
+<tr>
+<td><strong><code>small</code></strong></td>
+<td>460 MB</td>
+<td>~3×</td>
+<td>⭐⭐⭐⭐ (recommended)</td>
+</tr>
+<tr>
+<td><code>medium</code></td>
+<td>1.5 GB</td>
+<td>~1.5×</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+<tr>
+<td><code>large-v3</code></td>
+<td>3 GB</td>
+<td>~0.7×</td>
+<td>⭐⭐⭐⭐⭐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The first time you use a model it auto-downloads from Hugging Face</strong> to <code>~/.cache/huggingface/</code>, then loads directly on later launches.</p>
+<h3 id="translation-concurrency-batching">🚀 Translation concurrency &amp; batching</h3>
+<p><strong>Adaptive batching</strong>:
+- Up to 50 lines per batch (<code>translator_batch_size</code>)
+- Or cut early at 4000 characters (<code>translator_max_batch_chars</code>)
+- <strong>4-way concurrency</strong> in the cloud by default (<code>translator_parallel_workers</code>)
+- Local servers (LM Studio / Ollama) <strong>automatically drop to 1 worker</strong> (a single model can't truly parallelize)</p>
+<p>A 90-min video with 800 subtitle segments → 27 serial batches before optimization, <strong>16 batches × 4-way concurrency after, cutting total time to 1/6</strong>.</p>
+<h3 id="viewing-logs">🔍 Viewing logs</h3>
+<p><strong>Right-click menu</strong> in the bottom-right log area, or click <strong>"🔍 Open in New Window"</strong> for a standalone window:
+- Search bar at the top, Enter jumps to the next match
+- ↑↓ to search up/down
+- Auto-scroll-to-bottom toggle
+- Copy all / Save to .txt / Clear</p>
+<p>Every log line is prefixed with a <strong><code>[HH:MM:SS]</code></strong> timestamp.</p>
+<hr />
+<h2 id="troubleshooting">🛠 Troubleshooting</h2>
+<h3 id="ffmpeg-not-found">❓ FFmpeg not found</h3>
+<pre><code>[Environment warning] FFmpeg not found
+</code></pre>
+<p><strong>macOS</strong>: <code>brew install ffmpeg-full</code> (full build, with libass) or <code>brew install ffmpeg</code> (slim build)
+<strong>Windows</strong>: <a href="https://www.gyan.dev/ffmpeg/builds/">download ffmpeg</a>, unzip, add <code>bin/</code> to PATH</p>
+<h3 id="burned-subtitles-show-garbled-text-boxes">❓ Burned subtitles show garbled text / boxes</h3>
+<p>The font doesn't support your language. <strong>Settings → Subtitle Style → Font Name</strong>:
+- macOS: <code>PingFang SC</code>
+- Windows: <code>Microsoft YaHei</code> or <code>SimHei</code></p>
+<h3 id="lm-studio-fails-on-the-second-batch-with-a-tree_reduce-error">❓ LM Studio fails on the second batch with a <code>tree_reduce</code> error</h3>
+<p>Your <strong>reasoning models</strong> like Qwen3 / DeepSeek-R1 aren't suited for batch translation. Switch to a non-reasoning model like <code>qwen2.5-7b-instruct</code>, or disable thinking mode in LM Studio.</p>
+<h3 id="elapsed-remaining-shows-0000">❓ "Elapsed" / "Remaining" shows <code>00:00</code></h3>
+<p>An old bug, fixed in v0.2.0 (per-second QTimer + an independent ETA for the burn-in stage).</p>
+<h3 id="burn-in-stalls-at-a-percentage-for-a-long-time">❓ Burn-in stalls at a percentage for a long time</h3>
+<p>v0.2.0 fixed a stderr pipe deadlock. If you see the <strong><code>⏳ Still processing (no new progress for 60s)</code></strong> heartbeat message, ffmpeg really is running, just slowly. drawtext mode is inherently slow with 1000+ subtitles — install ffmpeg-full and switch to libass mode.</p>
+<h3 id="the-mac-dock-shows-python311-instead-of-the-app-name">❓ The Mac Dock shows <code>python3.11</code> instead of the app name</h3>
+<p>When running from source, install pyobjc:</p>
+<pre><code class="language-bash">pip install pyobjc-framework-Cocoa
+</code></pre>
+<p>This doesn't happen once packaged into a <code>.app</code>.</p>
+<h3 id="the-translation-api-returns-401-insufficient-balance">❓ The translation API returns 401 / insufficient balance</h3>
+<p>Open <strong>Settings → Translation Models</strong>, select your provider, and click <strong>🔌 Test Connection</strong>. The error message will show the specific cause.</p>
+<h3 id="a-video-processed-once-is-still-slow-on-rerun">❓ A video processed once is still slow on rerun</h3>
+<p>ASR cache should hit in seconds. If it's still slow, it may be:
+1. The video content changed (re-edited) → different ID → reruns
+2. You changed the Whisper model → fingerprint mismatch → reruns</p>
+<p>Check <strong>Settings → View Cache</strong> to confirm whether the cache hit.</p>
+<hr />
+<h2 id="building-it-yourself">📦 Building It Yourself</h2>
+<h3 id="macos-produce-app-dmg">macOS: produce <code>.app</code> + <code>.dmg</code></h3>
+<pre><code class="language-bash">chmod +x build_mac.sh
+./build_mac.sh
+</code></pre>
+<p>The script automatically:
+1. Finds your conda environment
+2. Installs PyInstaller
+3. Uses <code>SubtitleTranslator.spec</code> to produce <code>dist/SubtitleTranslator.app</code>
+4. Calls <code>create_dmg.sh</code> to package <code>dist/SubtitleTranslator-0.2.0.dmg</code></p>
+<h3 id="windows-produce-exe">Windows: produce <code>.exe</code></h3>
+<pre><code class="language-cmd">build_windows.bat
+</code></pre>
+<p>Output is at <code>dist\SubtitleTranslator\SubtitleTranslator.exe</code>. You can distribute the folder, or build an installer with NSIS / Inno Setup.</p>
+<h3 id="push-to-github-for-automatic-ci-builds">Push to GitHub for automatic CI builds</h3>
+<p>The repo already includes <code>.github/workflows/build.yml</code>. On push to the main branch:
+- The macOS runner runs <code>build_mac.sh</code> to produce the <code>.dmg</code>
+- The Windows runner runs <code>build_windows.bat</code> to produce the <code>.zip</code>
+- Download the artifacts from the Actions page</p>
+<hr />
+<h2 id="config-file-location">🤝 Config File Location</h2>
+<table>
+<thead>
+<tr>
+<th>Platform</th>
+<th>Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>macOS / Linux</td>
+<td><code>~/.subtitle_translator/config.json</code></td>
+</tr>
+<tr>
+<td>Windows</td>
+<td><code>%USERPROFILE%\.subtitle_translator\config.json</code></td>
+</tr>
+</tbody>
+</table>
+<p>Contains: API keys, Whisper model choice, theme, and all UI state.</p>
+<p><strong>Cache</strong>: <code>~/.subtitle_translator/cache/&lt;video_id&gt;/</code>
+<strong>Check icon</strong>: <code>~/.subtitle_translator/check_white.png</code></p>
+<hr />
+<h2 id="license">📜 License</h2>
+<p>MIT — see <a href="LICENSE">LICENSE</a></p>
+<hr />
+<h2 id="acknowledgements">🙏 Acknowledgements</h2>
+<ul>
+<li><a href="https://github.com/SYSTRAN/faster-whisper">faster-whisper</a> — fast Whisper inference</li>
+<li><a href="https://ffmpeg.org/">FFmpeg</a> — the all-rounder for video processing</li>
+<li><a href="https://github.com/libass/libass">libass</a> — subtitle rendering</li>
+<li><a href="https://riverbankcomputing.com/software/pyqt/">PyQt6</a> — cross-platform GUI</li>
+<li>All the LLM API providers — OpenAI / Anthropic / DeepSeek / Alibaba / Zhipu / and more</li>
+</ul>
+<hr />
+<h2 id="feedback">📞 Feedback</h2>
+<ul>
+<li>Issues: <a href="https://github.com/yourname/subtitle-translator/issues">github.com/yourname/subtitle-translator/issues</a></li>
+<li>Discussions: <a href="https://github.com/yourname/subtitle-translator/discussions">github.com/yourname/subtitle-translator/discussions</a></li>
+</ul>
+<p>Made with ❤️ for the open-source community.</p>
+  </section>
+</div>
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const panels = document.querySelectorAll('.panel');
+  function activate(name){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    panels.forEach(p => p.classList.toggle('active', p.id === name));
+    history.replaceState(null, '', '#' + name);
+    document.documentElement.lang = name === 'zh' ? 'zh-CN' : 'en';
+  }
+  tabs.forEach(t => t.addEventListener('click', () => activate(t.dataset.tab)));
+  const init = location.hash.replace('#','');
+  if (init === 'en' || init === 'zh') activate(init);
+</script>
+</body>
+</html>
