@@ -11,13 +11,19 @@ openai>=1.30.0
 anthropic>=0.30.0
 
 # HTTP 请求 (用于自定义 OpenAI 兼容 API 和国内模型)
-requests>=2.31.0
+# CVE 修复版本要求 Python >=3.10,与项目运行要求一致。
+requests>=2.33.0
+urllib3>=2.7.0
+filelock>=3.20.3
 
 # 字幕文件处理
 pysrt>=1.1.2
 
 # FFmpeg Python 封装(可选,主要用 subprocess 调 ffmpeg)
 ffmpeg-python>=0.2.0
+
+# 依赖安全审计
+pip-audit>=2.9.0
 
 # macOS Dock 名修正(让 Dock 不显示 python3.11)
 pyobjc-framework-Cocoa>=10.0; sys_platform == 'darwin'

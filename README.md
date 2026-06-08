@@ -1,4 +1,4 @@
-# 字幕生成与翻译 · Subtitle Generation & Translation v0.2.0
+# 字幕生成与翻译 · Subtitle Generation & Translation v0.3.0
 
 > 点击下方语言标题即可在本页展开对应语言 · Click a language heading below to expand it in place.
 
@@ -55,8 +55,8 @@
 
 | 平台 | 文件 |
 |---|---|
-| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.2.0.dmg` |
-| Windows 10/11 (64-bit) | `SubtitleTranslator-0.2.0-Setup.exe` 或 `SubtitleTranslator-0.2.0-portable.zip` |
+| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.3.0.dmg` |
+| Windows 10/11 (64-bit) | `SubtitleTranslator-0.3.0-Setup.exe` 或 `SubtitleTranslator-0.3.0-portable.zip` |
 
 **macOS 首次打开**:右键 → 打开(绕过未签名警告),或终端跑:
 ```bash
@@ -289,7 +289,7 @@ chmod +x build_mac.sh
 1. 找到你 conda 环境
 2. 装 PyInstaller
 3. 用 `SubtitleTranslator.spec` 出 `dist/SubtitleTranslator.app`
-4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.2.0.dmg`
+4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.3.0.dmg`
 
 ### Windows 出 `.exe`
 
@@ -400,8 +400,8 @@ Download the right package from the [Releases page](https://github.com/yourname/
 
 | Platform | File |
 |---|---|
-| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.2.0.dmg` |
-| Windows 10/11 (64-bit) | `SubtitleTranslator-0.2.0-Setup.exe` or `SubtitleTranslator-0.2.0-portable.zip` |
+| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.3.0.dmg` |
+| Windows 10/11 (64-bit) | `SubtitleTranslator-0.3.0-Setup.exe` or `SubtitleTranslator-0.3.0-portable.zip` |
 
 **First launch on macOS**: right-click → Open (to bypass the unsigned-app warning), or run in Terminal:
 ```bash
@@ -634,7 +634,7 @@ The script automatically:
 1. Finds your conda environment
 2. Installs PyInstaller
 3. Uses `SubtitleTranslator.spec` to produce `dist/SubtitleTranslator.app`
-4. Calls `create_dmg.sh` to package `dist/SubtitleTranslator-0.2.0.dmg`
+4. Calls `create_dmg.sh` to package `dist/SubtitleTranslator-0.3.0.dmg`
 
 ### Windows: produce `.exe`
 
