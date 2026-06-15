@@ -56,7 +56,7 @@
 </head>
 <body>
 <div class="wrap">
-  <h1 class="page-title">字幕生成与翻译 · Subtitle Generation &amp; Translation <small>v0.2.0</small></h1>
+  <h1 class="page-title">字幕生成与翻译 · Subtitle Generation &amp; Translation <small>v0.3.0</small></h1>
   <p class="sub">点击标签切换语言 · Click a tab to switch language</p>
   <div class="tabs" role="tablist">
     <button class="tab active" data-tab="zh" role="tab">🇨🇳 中文</button>
@@ -82,6 +82,10 @@
 <tr>
 <td>🎙 <strong>语音识别</strong></td>
 <td>本地 Faster-Whisper(免费/离线) 或 OpenAI Whisper API</td>
+</tr>
+<tr>
+<td>🔗 <strong>视频 URL 导入</strong></td>
+<td>粘贴 YouTube / Bilibili / TikTok / 抖音等在线视频链接,自动下载并保留原视频</td>
 </tr>
 <tr>
 <td>💬 <strong>多家翻译模型</strong></td>
@@ -179,11 +183,11 @@
 <tbody>
 <tr>
 <td>macOS (Apple Silicon / Intel)</td>
-<td><code>SubtitleTranslator-0.2.0.dmg</code></td>
+<td><code>SubtitleTranslator-0.3.0.dmg</code></td>
 </tr>
 <tr>
 <td>Windows 10/11 (64-bit)</td>
-<td><code>SubtitleTranslator-0.2.0-Setup.exe</code> 或 <code>SubtitleTranslator-0.2.0-portable.zip</code></td>
+<td><code>SubtitleTranslator-0.3.0-Setup.exe</code> 或 <code>SubtitleTranslator-0.3.0-portable.zip</code></td>
 </tr>
 </tbody>
 </table>
@@ -284,6 +288,8 @@ python main.py
 </code></pre>
 <hr />
 <h2 id="_5">📚 进阶用法</h2>
+<h3 id="url-video">🔗 在线视频 URL</h3>
+<p>在「源文件」卡片把输入来源切换为「视频 URL」,粘贴 YouTube / Bilibili / TikTok / 抖音等链接后开始处理。应用会先用 <code>yt-dlp</code> 下载原视频,下载文件会保留在输出目录;如果输出目录留空,默认保存到 <code>~/Downloads/Subtitle Translator</code>。</p>
 <h3 id="_6">🗂 字幕模式三选一</h3>
 <table>
 <thead>
@@ -475,7 +481,7 @@ python main.py
 1. 找到你 conda 环境
 2. 装 PyInstaller
 3. 用 <code>SubtitleTranslator.spec</code> 出 <code>dist/SubtitleTranslator.app</code>
-4. 调 <code>create_dmg.sh</code> 打成 <code>dist/SubtitleTranslator-0.2.0.dmg</code></p>
+4. 调 <code>create_dmg.sh</code> 打成 <code>dist/SubtitleTranslator-0.3.0.dmg</code></p>
 <h3 id="windows-exe">Windows 出 <code>.exe</code></h3>
 <pre><code class="language-cmd">build_windows.bat
 </code></pre>
@@ -548,6 +554,10 @@ Tech stack: <strong>PyQt6 + Faster-Whisper + FFmpeg</strong></p>
 <tr>
 <td>🎙 <strong>Speech recognition</strong></td>
 <td>Local Faster-Whisper (free/offline) or OpenAI Whisper API</td>
+</tr>
+<tr>
+<td>🔗 <strong>Video URL import</strong></td>
+<td>Paste YouTube / Bilibili / TikTok / Douyin links, then download and keep the source video automatically</td>
 </tr>
 <tr>
 <td>💬 <strong>Multiple translation models</strong></td>
@@ -645,11 +655,11 @@ Tech stack: <strong>PyQt6 + Faster-Whisper + FFmpeg</strong></p>
 <tbody>
 <tr>
 <td>macOS (Apple Silicon / Intel)</td>
-<td><code>SubtitleTranslator-0.2.0.dmg</code></td>
+<td><code>SubtitleTranslator-0.3.0.dmg</code></td>
 </tr>
 <tr>
 <td>Windows 10/11 (64-bit)</td>
-<td><code>SubtitleTranslator-0.2.0-Setup.exe</code> or <code>SubtitleTranslator-0.2.0-portable.zip</code></td>
+<td><code>SubtitleTranslator-0.3.0-Setup.exe</code> or <code>SubtitleTranslator-0.3.0-portable.zip</code></td>
 </tr>
 </tbody>
 </table>
@@ -750,6 +760,8 @@ python main.py
 </code></pre>
 <hr />
 <h2 id="advanced-usage">📚 Advanced Usage</h2>
+<h3 id="online-video-urls">🔗 Online Video URLs</h3>
+<p>In the Source card, switch the input source to <strong>Video URL</strong>, paste a YouTube / Bilibili / TikTok / Douyin link, then start processing. The app downloads the source video with <code>yt-dlp</code> first and keeps the downloaded file in the output directory. If the output directory is empty, it saves to <code>~/Downloads/Subtitle Translator</code> by default.</p>
 <h3 id="pick-one-of-three-subtitle-modes">🗂 Pick one of three subtitle modes</h3>
 <table>
 <thead>
@@ -941,7 +953,7 @@ python main.py
 1. Finds your conda environment
 2. Installs PyInstaller
 3. Uses <code>SubtitleTranslator.spec</code> to produce <code>dist/SubtitleTranslator.app</code>
-4. Calls <code>create_dmg.sh</code> to package <code>dist/SubtitleTranslator-0.2.0.dmg</code></p>
+4. Calls <code>create_dmg.sh</code> to package <code>dist/SubtitleTranslator-0.3.0.dmg</code></p>
 <h3 id="windows-produce-exe">Windows: produce <code>.exe</code></h3>
 <pre><code class="language-cmd">build_windows.bat
 </code></pre>

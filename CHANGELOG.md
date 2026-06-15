@@ -10,6 +10,26 @@
 
 ---
 
+## [0.3.0] — 2026-06-15
+
+功能与安全更新。新增在线视频 URL 导入,并处理 `pip-audit` 报告的 `requests`、`urllib3`、`filelock` 已知漏洞。
+
+### ✨ 新增
+
+- 支持「视频 URL」输入来源,可用 `yt-dlp` 下载 YouTube / Bilibili / TikTok / 抖音等站点视频,下载后的原视频会保留在输出目录
+
+### 🛡 安全
+
+- 新增 `pip-audit>=2.9.0`,用于对 `requirements.txt` 做 CVE 审计
+- `requests` 最低版本提升到 `>=2.33.0`,修复 `CVE-2026-25645`
+- 显式约束 `urllib3>=2.7.0`,修复 `CVE-2026-44431` / `CVE-2026-44432`
+- 显式约束 `filelock>=3.20.3`,修复 `CVE-2025-68146` / `CVE-2026-22701`
+- GitHub Actions 的 Windows 分步依赖安装同步使用修复后的安全版本约束
+
+### ⚠ 兼容性
+
+- 修复版本依赖要求 Python >=3.10,与项目 README 和打包脚本的运行要求保持一致
+
 ## [0.2.0] — 2026-05-29
 
 围绕 v0.1.0 上线后用户反馈做的稳定性 / 可用性版本。重点解决 **Whisper 时间戳异常**、**VAD 漏识别**、**烧录输出命名**、**CI 构建**等问题。
@@ -77,6 +97,7 @@
 - 烧录输出文件名规则变了:从 `video.subtitled.mp4` → `video.en-zh.mp4` 这种。如果你有脚本依赖旧命名,需要更新
 - ASR 缓存全部失效:从 v0.1.0 升级到 v0.2.0,首次运行同视频会**重新识别**(因为 fingerprint version 升级)
 
+[0.3.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.2.0
 
 ---
@@ -201,6 +222,26 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.3.0] — 2026-06-15
+
+Feature and security update. This release adds online video URL imports and addresses the known `requests`, `urllib3`, and `filelock` vulnerabilities reported by `pip-audit`.
+
+### ✨ Added
+
+- Added a **Video URL** input source powered by `yt-dlp` for YouTube / Bilibili / TikTok / Douyin and similar sites; downloaded source videos are kept in the output directory
+
+### 🛡 Security
+
+- Added `pip-audit>=2.9.0` for auditing `requirements.txt`
+- Raised `requests` to `>=2.33.0` to remediate `CVE-2026-25645`
+- Added explicit `urllib3>=2.7.0` constraint to remediate `CVE-2026-44431` / `CVE-2026-44432`
+- Added explicit `filelock>=3.20.3` constraint to remediate `CVE-2025-68146` / `CVE-2026-22701`
+- Updated the GitHub Actions Windows split dependency install step to use the remediated constraints
+
+### ⚠ Compatibility
+
+- The remediated dependency versions require Python >=3.10, matching the project's README and packaging scripts
+
 ## [0.2.0] — 2026-05-29
 
 A stability / usability release driven by user feedback after the v0.1.0 launch. It focuses on **abnormal Whisper timestamps**, **VAD missed detections**, **burn-in output naming**, and **CI builds**.
@@ -268,6 +309,7 @@ A stability / usability release driven by user feedback after the v0.1.0 launch.
 - The burn-in output filename rule changed: from `video.subtitled.mp4` → forms like `video.en-zh.mp4`. If you have scripts depending on the old naming, update them
 - All ASR caches are invalidated: when upgrading from v0.1.0 to v0.2.0, the first run on the same video will **re-recognize** (because the fingerprint version was bumped)
 
+[0.3.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.2.0
 
 ---

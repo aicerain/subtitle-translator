@@ -22,6 +22,7 @@ from .translator import build_translator
 from .subtitle import write_srt
 from . import video as video_utils
 from . import cache as cache_mod
+from .downloader import download_video_from_url, is_video_url
 
 
 class SubtitleWorker(QThread):
@@ -77,6 +78,7 @@ class SubtitleWorker(QThread):
         self._final_segments: list[Segment] = []
         self._final_translations: list[str] = []
         self._srt_path = ""
+        self.prepared_video_path = ""
 
         self._tmp_audio: Optional[str] = None
 
@@ -139,7 +141,8 @@ class SubtitleWorker(QThread):
     # ------- 主流程 -------
 
     def _run_pipeline(self) -> None:
-        video = self.video_path
+        video = self._prepare_video_input()
+        self.prepared_video_path = video
         video_name = Path(video).stem
 
         # 0. 计算视频 ID(基于内容,用作缓存键)
@@ -396,6 +399,36 @@ class SubtitleWorker(QThread):
         self.progress.emit(100)
         self.stage_changed.emit("完成")
         self.finished_ok.emit(self._srt_path, burned_path)
+
+    def _prepare_video_input(self) -> str:
+        """把用户输入准备成本地视频路径。URL 输入会先下载并保留到输出目录。"""
+        if not is_video_url(self.video_path):
+            return self.video_path
+
+        out_dir = Path(self.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+
+        self.stage_changed.emit("下载在线视频")
+        self.log.emit(f"开始下载在线视频: {self.video_path}")
+
+        def _download_cb(msg: str):
+            self.log.emit(msg)
+            import re as _re
+            mo = _re.search(r"下载进度:\s*(\d+)%", msg)
+            if mo:
+                pct = int(mo.group(1))
+                self.progress.emit(int(pct * 0.10))
+            if self._cancel_event.is_set():
+                raise CancelledError()
+
+        result = download_video_from_url(
+            self.video_path,
+            str(out_dir),
+            progress_cb=_download_cb,
+        )
+        self.progress.emit(10)
+        self.log.emit(f"在线视频已保存: {result.path}")
+        return result.path
 
     def _do_softmux(self, out_dir: Path, video_name: str, ext: str, video: str) -> str:
         """软字幕兜底:不重新编码,秒级嵌入到 mp4 字幕轨。

@@ -1,4 +1,4 @@
-# 字幕生成与翻译 · Subtitle Generation & Translation v0.2.0
+# 字幕生成与翻译 · Subtitle Generation & Translation v0.3.0
 
 > 点击下方语言标题即可在本页展开对应语言 · Click a language heading below to expand it in place.
 
@@ -20,6 +20,7 @@
 | 功能 | 说明 |
 |---|---|
 | 🎙 **语音识别** | 本地 Faster-Whisper(免费/离线) 或 OpenAI Whisper API |
+| 🔗 **视频 URL 导入** | 粘贴 YouTube / Bilibili / TikTok / 抖音等在线视频链接,自动下载并保留原视频 |
 | 💬 **多家翻译模型** | OpenAI / Anthropic Claude / DeepSeek / 通义千问 / 智谱 GLM / LM Studio 本地 / 自定义 OpenAI 兼容 API |
 | 🌍 **17 种语言互译** | 中英日韩法德西俄葡意阿泰越印尼印地等 |
 | 📺 **三种字幕模式** | 仅原文 / 仅译文 / 双字幕(原文在上,译文在下) |
@@ -55,8 +56,8 @@
 
 | 平台 | 文件 |
 |---|---|
-| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.2.0.dmg` |
-| Windows 10/11 (64-bit) | `SubtitleTranslator-0.2.0-Setup.exe` 或 `SubtitleTranslator-0.2.0-portable.zip` |
+| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.3.0.dmg` |
+| Windows 10/11 (64-bit) | `SubtitleTranslator-0.3.0-Setup.exe` 或 `SubtitleTranslator-0.3.0-portable.zip` |
 
 **macOS 首次打开**:右键 → 打开(绕过未签名警告),或终端跑:
 ```bash
@@ -125,6 +126,10 @@ python main.py
 ---
 
 ## 📚 进阶用法
+
+### 🔗 在线视频 URL
+
+在「源文件」卡片把输入来源切换为「视频 URL」,粘贴 YouTube / Bilibili / TikTok / 抖音等链接后开始处理。应用会先用 `yt-dlp` 下载原视频,下载文件会保留在输出目录;如果输出目录留空,默认保存到 `~/Downloads/Subtitle Translator`。
 
 ### 🗂 字幕模式三选一
 
@@ -289,7 +294,7 @@ chmod +x build_mac.sh
 1. 找到你 conda 环境
 2. 装 PyInstaller
 3. 用 `SubtitleTranslator.spec` 出 `dist/SubtitleTranslator.app`
-4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.2.0.dmg`
+4. 调 `create_dmg.sh` 打成 `dist/SubtitleTranslator-0.3.0.dmg`
 
 ### Windows 出 `.exe`
 
@@ -365,6 +370,7 @@ Tech stack: **PyQt6 + Faster-Whisper + FFmpeg**
 | Feature | Description |
 |---|---|
 | 🎙 **Speech recognition** | Local Faster-Whisper (free/offline) or OpenAI Whisper API |
+| 🔗 **Video URL import** | Paste YouTube / Bilibili / TikTok / Douyin links, then download and keep the source video automatically |
 | 💬 **Multiple translation models** | OpenAI / Anthropic Claude / DeepSeek / Qwen / Zhipu GLM / LM Studio (local) / any OpenAI-compatible API |
 | 🌍 **17 languages, any-to-any** | Chinese, English, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Italian, Arabic, Thai, Vietnamese, Indonesian, Hindi, and more |
 | 📺 **Three subtitle modes** | Source only / Translation only / Bilingual (source on top, translation below) |
@@ -400,8 +406,8 @@ Download the right package from the [Releases page](https://github.com/yourname/
 
 | Platform | File |
 |---|---|
-| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.2.0.dmg` |
-| Windows 10/11 (64-bit) | `SubtitleTranslator-0.2.0-Setup.exe` or `SubtitleTranslator-0.2.0-portable.zip` |
+| macOS (Apple Silicon / Intel) | `SubtitleTranslator-0.3.0.dmg` |
+| Windows 10/11 (64-bit) | `SubtitleTranslator-0.3.0-Setup.exe` or `SubtitleTranslator-0.3.0-portable.zip` |
 
 **First launch on macOS**: right-click → Open (to bypass the unsigned-app warning), or run in Terminal:
 ```bash
@@ -470,6 +476,10 @@ Open the app → **Settings → API & Model Settings → 💬 Translation Models
 ---
 
 ## 📚 Advanced Usage
+
+### 🔗 Online Video URLs
+
+In the Source card, switch the input source to **Video URL**, paste a YouTube / Bilibili / TikTok / Douyin link, then start processing. The app downloads the source video with `yt-dlp` first and keeps the downloaded file in the output directory. If the output directory is empty, it saves to `~/Downloads/Subtitle Translator` by default.
 
 ### 🗂 Pick one of three subtitle modes
 
@@ -634,7 +644,7 @@ The script automatically:
 1. Finds your conda environment
 2. Installs PyInstaller
 3. Uses `SubtitleTranslator.spec` to produce `dist/SubtitleTranslator.app`
-4. Calls `create_dmg.sh` to package `dist/SubtitleTranslator-0.2.0.dmg`
+4. Calls `create_dmg.sh` to package `dist/SubtitleTranslator-0.3.0.dmg`
 
 ### Windows: produce `.exe`
 

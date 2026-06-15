@@ -4,6 +4,7 @@
 
 import sys
 from pathlib import Path
+from PyInstaller.utils.hooks import collect_submodules
 
 block_cipher = None
 
@@ -35,7 +36,7 @@ hiddenimports = [
     "onnxruntime",
     # 字幕
     "pysrt",
-]
+] + collect_submodules("yt_dlp")
 
 datas = []
 # 如有图标资源、配置默认值文件等,可以放进去
