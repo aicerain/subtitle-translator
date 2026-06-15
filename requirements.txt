@@ -22,6 +22,9 @@ pysrt>=1.1.2
 # FFmpeg Python 封装(可选,主要用 subprocess 调 ffmpeg)
 ffmpeg-python>=0.2.0
 
+# 在线视频 URL 下载
+yt-dlp>=2026.6.9
+
 # 依赖安全审计
 pip-audit>=2.9.0
 

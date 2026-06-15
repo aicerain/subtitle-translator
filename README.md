@@ -20,6 +20,7 @@
 | 功能 | 说明 |
 |---|---|
 | 🎙 **语音识别** | 本地 Faster-Whisper(免费/离线) 或 OpenAI Whisper API |
+| 🔗 **视频 URL 导入** | 粘贴 YouTube / Bilibili / TikTok / 抖音等在线视频链接,自动下载并保留原视频 |
 | 💬 **多家翻译模型** | OpenAI / Anthropic Claude / DeepSeek / 通义千问 / 智谱 GLM / LM Studio 本地 / 自定义 OpenAI 兼容 API |
 | 🌍 **17 种语言互译** | 中英日韩法德西俄葡意阿泰越印尼印地等 |
 | 📺 **三种字幕模式** | 仅原文 / 仅译文 / 双字幕(原文在上,译文在下) |
@@ -125,6 +126,10 @@ python main.py
 ---
 
 ## 📚 进阶用法
+
+### 🔗 在线视频 URL
+
+在「源文件」卡片把输入来源切换为「视频 URL」,粘贴 YouTube / Bilibili / TikTok / 抖音等链接后开始处理。应用会先用 `yt-dlp` 下载原视频,下载文件会保留在输出目录;如果输出目录留空,默认保存到 `~/Downloads/Subtitle Translator`。
 
 ### 🗂 字幕模式三选一
 
@@ -365,6 +370,7 @@ Tech stack: **PyQt6 + Faster-Whisper + FFmpeg**
 | Feature | Description |
 |---|---|
 | 🎙 **Speech recognition** | Local Faster-Whisper (free/offline) or OpenAI Whisper API |
+| 🔗 **Video URL import** | Paste YouTube / Bilibili / TikTok / Douyin links, then download and keep the source video automatically |
 | 💬 **Multiple translation models** | OpenAI / Anthropic Claude / DeepSeek / Qwen / Zhipu GLM / LM Studio (local) / any OpenAI-compatible API |
 | 🌍 **17 languages, any-to-any** | Chinese, English, Japanese, Korean, French, German, Spanish, Russian, Portuguese, Italian, Arabic, Thai, Vietnamese, Indonesian, Hindi, and more |
 | 📺 **Three subtitle modes** | Source only / Translation only / Bilingual (source on top, translation below) |
@@ -470,6 +476,10 @@ Open the app → **Settings → API & Model Settings → 💬 Translation Models
 ---
 
 ## 📚 Advanced Usage
+
+### 🔗 Online Video URLs
+
+In the Source card, switch the input source to **Video URL**, paste a YouTube / Bilibili / TikTok / Douyin link, then start processing. The app downloads the source video with `yt-dlp` first and keeps the downloaded file in the output directory. If the output directory is empty, it saves to `~/Downloads/Subtitle Translator` by default.
 
 ### 🗂 Pick one of three subtitle modes
 

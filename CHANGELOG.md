@@ -10,9 +10,13 @@
 
 ---
 
-## [0.3.0] — 2026-06-08
+## [0.3.0] — 2026-06-15
 
-安全依赖修复版本。重点处理 `pip-audit` 报告的 `requests`、`urllib3`、`filelock` 已知漏洞,并把依赖审计工具纳入项目依赖。
+功能与安全更新。新增在线视频 URL 导入,并处理 `pip-audit` 报告的 `requests`、`urllib3`、`filelock` 已知漏洞。
+
+### ✨ 新增
+
+- 支持「视频 URL」输入来源,可用 `yt-dlp` 下载 YouTube / Bilibili / TikTok / 抖音等站点视频,下载后的原视频会保留在输出目录
 
 ### 🛡 安全
 
@@ -218,9 +222,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
-## [0.3.0] — 2026-06-08
+## [0.3.0] — 2026-06-15
 
-Security dependency release. This version addresses the known `requests`, `urllib3`, and `filelock` vulnerabilities reported by `pip-audit`, and adds dependency auditing to the project dependencies.
+Feature and security update. This release adds online video URL imports and addresses the known `requests`, `urllib3`, and `filelock` vulnerabilities reported by `pip-audit`.
+
+### ✨ Added
+
+- Added a **Video URL** input source powered by `yt-dlp` for YouTube / Bilibili / TikTok / Douyin and similar sites; downloaded source videos are kept in the output directory
 
 ### 🛡 Security
 

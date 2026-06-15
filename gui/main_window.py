@@ -23,6 +23,7 @@ from core.worker import SubtitleWorker
 from core.video import (
     check_ffmpeg_installed, probe_video, human_size, human_duration,
 )
+from core.downloader import is_video_url
 from .settings_dialog import SettingsDialog
 from .preview_dialog import PreviewDialog
 from .progress_panel import ProgressPanel
@@ -37,6 +38,7 @@ VIDEO_EXTS = {
 
 # 把 worker stage_changed 发出的中文字符串映射到流水线 key
 STAGE_KEY_MAP = {
+    "下载在线视频":            "download",
     "提取音频":              "extract_audio",
     "语音识别":              "asr",
     "已从缓存恢复 ASR 结果":  "asr",
@@ -120,7 +122,7 @@ class MainWindow(QMainWindow):
         v = QVBoxLayout(w)
         v.setContentsMargins(0, 0, 0, 4)
         v.setSpacing(2)
-        sub = QLabel("从本地视频自动生成多语字幕,支持烧录、双语、本地大模型")
+        sub = QLabel("从本地视频或视频 URL 自动生成多语字幕,支持烧录、双语、本地大模型")
         sub.setProperty("role", "subtitle")
         v.addWidget(sub)
         return w
@@ -136,12 +138,23 @@ class MainWindow(QMainWindow):
 
         self.drop_zone = QLabel(
             "📁  把视频拖到这里,或点击右下「浏览…」按钮选择\n"
-            "支持 mp4 / mkv / mov / avi / webm / flv / ts ..."
+            "也可以切换到视频 URL,支持 YouTube / Bilibili / TikTok / 抖音等"
         )
         self.drop_zone.setObjectName("dropZone")     # 由 QSS 接管样式,跟主题切换
         self.drop_zone.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.drop_zone.setMinimumHeight(70)
         v.addWidget(self.drop_zone)
+
+        mode_row = QHBoxLayout()
+        mode_row.addWidget(self._mini_label("输入来源"))
+        self.input_mode = QComboBox()
+        self.input_mode.addItem("本地视频", "local")
+        self.input_mode.addItem("视频 URL", "url")
+        self.input_mode.currentIndexChanged.connect(self._on_input_mode_changed)
+        mode_row.addWidget(self.input_mode)
+        mode_row.addStretch()
+        mode_wrap = QWidget(); mode_wrap.setLayout(mode_row)
+        v.addWidget(mode_wrap)
 
         path_row = QHBoxLayout()
         self.video_path_edit = QLineEdit()
@@ -151,7 +164,18 @@ class MainWindow(QMainWindow):
         btn = QPushButton("📂 浏览…")
         btn.clicked.connect(self._choose_video)
         path_row.addWidget(btn)
-        v.addLayout(path_row)
+        self.local_input_wrap = QWidget()
+        self.local_input_wrap.setLayout(path_row)
+        v.addWidget(self.local_input_wrap)
+
+        url_row = QHBoxLayout()
+        self.video_url_edit = QLineEdit()
+        self.video_url_edit.setPlaceholderText("粘贴视频链接,如 YouTube / Bilibili / TikTok / 抖音")
+        url_row.addWidget(self.video_url_edit, 1)
+        self.url_input_wrap = QWidget()
+        self.url_input_wrap.setLayout(url_row)
+        v.addWidget(self.url_input_wrap)
+        self.url_input_wrap.hide()
 
         # 视频信息卡(默认隐藏)
         self.info_card = QFrame()
@@ -403,6 +427,8 @@ class MainWindow(QMainWindow):
     # ============================================================
 
     def dragEnterEvent(self, e: QDragEnterEvent):
+        if getattr(self, "input_mode", None) and self.input_mode.currentData() == "url":
+            return
         urls = e.mimeData().urls() if e.mimeData() else []
         if any(self._is_video(u.toLocalFile()) for u in urls):
             e.acceptProposedAction()
@@ -412,6 +438,8 @@ class MainWindow(QMainWindow):
         self._set_drop_zone_active(False)
 
     def dropEvent(self, e: QDropEvent):
+        if getattr(self, "input_mode", None) and self.input_mode.currentData() == "url":
+            return
         self._set_drop_zone_active(False)
         for url in e.mimeData().urls():
             path = url.toLocalFile()
@@ -452,6 +480,27 @@ class MainWindow(QMainWindow):
         self.drop_zone.setText(f"✅  已选择: {Path(path).name}")
         self._update_info_card(path)
         self.progress_panel.detail_label.setText("已就绪,可开始")
+
+    def _on_input_mode_changed(self, *_args):
+        is_url_mode = self.input_mode.currentData() == "url"
+        self.local_input_wrap.setVisible(not is_url_mode)
+        self.url_input_wrap.setVisible(is_url_mode)
+        self.info_card.setVisible(False)
+        if is_url_mode:
+            self.drop_zone.setText(
+                "🔗  粘贴在线视频 URL 后开始\n"
+                "下载原视频会保留到输出目录"
+            )
+            self.progress_panel.detail_label.setText("粘贴视频 URL 后开始")
+        else:
+            if self.video_path_edit.text().strip():
+                self._set_video(self.video_path_edit.text().strip())
+            else:
+                self.drop_zone.setText(
+                    "📁  把视频拖到这里,或点击右下「浏览…」按钮选择\n"
+                    "也可以切换到视频 URL,支持 YouTube / Bilibili / TikTok / 抖音等"
+                )
+                self.progress_panel.detail_label.setText("选择视频后开始")
 
     def _update_info_card(self, path: str):
         try:
@@ -497,7 +546,7 @@ class MainWindow(QMainWindow):
             save_config(self.config)
             self._refresh_provider_label()
             cur = self.video_path_edit.text()
-            if cur:
+            if cur and self.input_mode.currentData() == "local":
                 self._update_info_card(cur)
             self._log("[设置] 已保存")
 
@@ -520,10 +569,17 @@ class MainWindow(QMainWindow):
     # ============================================================
 
     def _start(self):
-        video = self.video_path_edit.text().strip()
-        if not video or not Path(video).exists():
-            QMessageBox.warning(self, "提示", "请先选择有效的视频文件")
-            return
+        input_mode = self.input_mode.currentData()
+        if input_mode == "url":
+            video = self.video_url_edit.text().strip()
+            if not is_video_url(video):
+                QMessageBox.warning(self, "提示", "请先输入有效的视频 URL")
+                return
+        else:
+            video = self.video_path_edit.text().strip()
+            if not video or not Path(video).exists():
+                QMessageBox.warning(self, "提示", "请先选择有效的视频文件")
+                return
 
         self.config["source_language"] = self.source_lang.currentData()
         self.config["target_language"] = self.target_lang.currentData()
@@ -538,6 +594,9 @@ class MainWindow(QMainWindow):
         mode = self.subtitle_mode.currentData()
         polish = self.polish_check.isChecked()
         burn = self.burn_check.isChecked()
+        output_dir = self.config["output_dir"] or None
+        if input_mode == "url" and output_dir is None:
+            output_dir = str(Path.home() / "Downloads" / "Subtitle Translator")
         need_translate_api = (mode != "original" and source_lang != target_lang) or polish
         if need_translate_api:
             provider = self.config.get("translator_provider", "openai")
@@ -555,7 +614,7 @@ class MainWindow(QMainWindow):
         # 重置 UI 进入 running
         self.progress_panel.clear_log()
         self.progress_panel.begin()
-        self._mark_skipped_stages(polish=polish, burn=burn)
+        self._mark_skipped_stages(polish=polish, burn=burn, download=(input_mode == "url"))
 
         self.worker = SubtitleWorker(
             video_path=video,
@@ -565,7 +624,7 @@ class MainWindow(QMainWindow):
             subtitle_mode=mode,
             polish_original=polish,
             burn=burn,
-            output_dir=self.config["output_dir"] or None,
+            output_dir=output_dir,
             preview_before_burn=self.preview_check.isChecked(),
         )
         self.worker.log.connect(self._log)
@@ -577,8 +636,10 @@ class MainWindow(QMainWindow):
         self.worker.cancelled.connect(self._on_cancelled)
         self.worker.start()
 
-    def _mark_skipped_stages(self, polish: bool, burn: bool):
+    def _mark_skipped_stages(self, polish: bool, burn: bool, download: bool):
         # 默认所有都 pending,只对不会执行的设 skipped
+        if not download:
+            self.progress_panel.set_stage("download", "skipped")
         if not polish:
             self.progress_panel.set_stage("polish", "skipped")
         if not burn:
@@ -651,7 +712,7 @@ class MainWindow(QMainWindow):
 
     def _on_ready_for_preview(self, srt_path: str, segments: list, translations: list):
         self._log(f"[预览] 字幕已生成: {srt_path}")
-        video = self.video_path_edit.text().strip()
+        video = getattr(self.worker, "prepared_video_path", "") or self.video_path_edit.text().strip()
         dlg = PreviewDialog(video_path=video, segments=segments, translations=translations, parent=self)
         if dlg.exec():
             self.worker.continue_with(dlg.edited_segments, dlg.edited_translations)

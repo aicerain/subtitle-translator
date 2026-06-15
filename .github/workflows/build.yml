@@ -132,7 +132,7 @@ jobs:
           pip install --prefer-binary "openai>=1.30.0" "anthropic>=0.30.0" "requests>=2.33.0" "urllib3>=2.7.0" "filelock>=3.20.3"
 
           Write-Host "==> Installing pysrt + ffmpeg-python"
-          pip install --prefer-binary "pysrt>=1.1.2" "ffmpeg-python>=0.2.0"
+          pip install --prefer-binary "pysrt>=1.1.2" "ffmpeg-python>=0.2.0" "yt-dlp>=2026.6.9"
 
           Write-Host "==> Installing faster-whisper (large download)"
           pip install --prefer-binary "faster-whisper>=1.0.0"
