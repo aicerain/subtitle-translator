@@ -60,7 +60,7 @@ class FasterWhisperTranscriber(TranscriberBase):
         device: str = "auto",
         compute_type: str = "auto",
         vad_filter: bool = True,
-        vad_threshold: float = 0.25,
+        vad_threshold: float = 0.15,
         vad_min_silence_ms: int = 2000,
     ):
         self.model_size = model_size
@@ -117,7 +117,7 @@ class FasterWhisperTranscriber(TranscriberBase):
 
         # VAD 参数说明:
         #   vad_filter=True  开启 VAD 预过滤(默认),自动跳过纯音乐/静默段
-        #   threshold=0.25   越低越宽松(把"可能是声音"的也当人声,避免漏台词)
+        #   threshold=0.15   越低越宽松(把"可能是声音"的也当人声,避免漏台词)
         #   min_silence_ms=2000  连续静默 ≥2s 才切段(避免相邻台词被合并)
         # 如果用户视频丢段,可在设置里关闭 vad_filter,Whisper 会处理全部音频
         vad_params = None
@@ -299,6 +299,6 @@ def build_transcriber(config: dict) -> TranscriberBase:
         device=config.get("whisper_device", "auto"),
         compute_type=config.get("whisper_compute_type", "auto"),
         vad_filter=bool(config.get("whisper_vad_filter", True)),
-        vad_threshold=float(config.get("whisper_vad_threshold", 0.25)),
+        vad_threshold=float(config.get("whisper_vad_threshold", 0.15)),
         vad_min_silence_ms=int(config.get("whisper_vad_min_silence_ms", 2000)),
     )

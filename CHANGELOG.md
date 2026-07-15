@@ -10,6 +10,17 @@
 
 ---
 
+## [0.3.1] — 2026-07-15
+
+低声对白识别修复版本。
+
+### 🐛 修复
+
+- 提取音轨时默认应用 EBU R128 响度标准化,提高低声对白进入 Whisper 识别流程的概率
+- 默认 VAD 阈值从 `0.25` 降至 `0.15`,减少轻声人声被当成静默而跳过的情况
+- 设置 → 语音识别新增「低声对白增强」开关;极端嘈杂素材可关闭后重试
+- ASR 缓存指纹升级,确保同一视频不会复用修复前的识别结果
+
 ## [0.3.0] — 2026-06-15
 
 功能与安全更新。新增在线视频 URL 导入,并处理 `pip-audit` 报告的 `requests`、`urllib3`、`filelock` 已知漏洞。
@@ -97,6 +108,7 @@
 - 烧录输出文件名规则变了:从 `video.subtitled.mp4` → `video.en-zh.mp4` 这种。如果你有脚本依赖旧命名,需要更新
 - ASR 缓存全部失效:从 v0.1.0 升级到 v0.2.0,首次运行同视频会**重新识别**(因为 fingerprint version 升级)
 
+[0.3.1]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.1
 [0.3.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.2.0
 
@@ -222,6 +234,17 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/), and
 
 ---
 
+## [0.3.1] — 2026-07-15
+
+Low-volume dialogue recognition fix.
+
+### 🐛 Fixed
+
+- Apply EBU R128 loudness normalization to extracted audio by default, improving the chance that quiet dialogue reaches Whisper
+- Lower the default VAD threshold from `0.25` to `0.15` so soft speech is less likely to be treated as silence
+- Add a **Low-volume dialogue enhancement** setting; it can be disabled for exceptionally noisy material
+- Upgrade the ASR cache fingerprint so the same video is re-transcribed instead of reusing pre-fix results
+
 ## [0.3.0] — 2026-06-15
 
 Feature and security update. This release adds online video URL imports and addresses the known `requests`, `urllib3`, and `filelock` vulnerabilities reported by `pip-audit`.
@@ -309,6 +332,7 @@ A stability / usability release driven by user feedback after the v0.1.0 launch.
 - The burn-in output filename rule changed: from `video.subtitled.mp4` → forms like `video.en-zh.mp4`. If you have scripts depending on the old naming, update them
 - All ASR caches are invalidated: when upgrading from v0.1.0 to v0.2.0, the first run on the same video will **re-recognize** (because the fingerprint version was bumped)
 
+[0.3.1]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.1
 [0.3.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.3.0
 [0.2.0]: https://github.com/aicerain/subtitle-translator/releases/tag/v0.2.0
 
