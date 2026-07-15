@@ -21,10 +21,12 @@ DEFAULT_CONFIG = {
 
     # VAD(语音活动检测)— Whisper 的预处理,跳过静默段
     # 关闭 = 处理全部音频(慢一点,但不会漏台词)
-    # threshold 越低越宽松(更容易把声音当成人声),默认 0.25
+    # threshold 越低越宽松(更容易把声音当成人声),默认 0.15
     "whisper_vad_filter": True,
-    "whisper_vad_threshold": 0.25,
+    "whisper_vad_threshold": 0.15,
     "whisper_vad_min_silence_ms": 2000,
+    # 提取音轨时标准化响度,提高低声对白被 VAD / Whisper 捕获的概率
+    "whisper_audio_normalization": True,
 
     # OpenAI Whisper API 配置 (asr_engine = "openai-api" 时使用)
     "openai_whisper_api_key": "",

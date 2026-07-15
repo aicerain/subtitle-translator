@@ -59,10 +59,12 @@ def extract_audio(
     video_path: str,
     output_audio_path: Optional[str] = None,
     sample_rate: int = 16000,
+    normalize_loudness: bool = True,
     progress_cb: Optional[Callable[[str], None]] = None,
 ) -> str:
     """
     从视频提取单声道 WAV 音频(16kHz 是 Whisper 标准输入)。
+    默认将音轨标准化到适合语音识别的响度,避免低声对白被当成静默。
     返回输出音频路径。
     """
     ffmpeg = find_ffmpeg()
@@ -79,8 +81,11 @@ def extract_audio(
         "-acodec", "pcm_s16le",        # 16-bit PCM
         "-ar", str(sample_rate),
         "-ac", "1",                    # 单声道
-        output_audio_path,
     ]
+    if normalize_loudness:
+        # EBU R128 目标响度。放大低声对白,同时限制峰值以避免削波失真。
+        cmd.extend(["-af", "loudnorm=I=-16:LRA=11:TP=-1.5"])
+    cmd.append(output_audio_path)
     if progress_cb:
         progress_cb(f"提取音频: {Path(video_path).name}")
 

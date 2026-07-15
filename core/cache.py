@@ -122,9 +122,12 @@ def asr_fingerprint(config: dict, source_language: str) -> dict:
         "source_language": source_language,
         # VAD 参数也进 fingerprint,改了 VAD 自动失效缓存重新识别
         "whisper_vad_filter": bool(config.get("whisper_vad_filter", True)),
-        "whisper_vad_threshold": float(config.get("whisper_vad_threshold", 0.25)),
+        "whisper_vad_threshold": float(config.get("whisper_vad_threshold", 0.15)),
         "whisper_vad_min_silence_ms": int(config.get("whisper_vad_min_silence_ms", 2000)),
-        "asr_postproc_version": 4,   # v4: VAD threshold 默认 0.25 (更宽松,默认就比 0.35 更易识别)
+        "whisper_audio_normalization": bool(
+            config.get("whisper_audio_normalization", True)
+        ),
+        "asr_postproc_version": 5,   # v5: 音轨响度标准化,改善低声对白识别
     }
 
 

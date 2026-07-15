@@ -170,7 +170,11 @@ class SubtitleWorker(QThread):
             self.stage_changed.emit("提取音频")
             self.log.emit(f"开始处理: {video}")
             self._tmp_audio = video_utils.extract_audio(
-                video, progress_cb=lambda m: self.log.emit(m)
+                video,
+                normalize_loudness=bool(
+                    self.config.get("whisper_audio_normalization", True)
+                ),
+                progress_cb=lambda m: self.log.emit(m),
             )
             self.progress.emit(10)
             self._check_cancelled()

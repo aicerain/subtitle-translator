@@ -169,9 +169,9 @@ class SettingsDialog(QDialog):
         self.vad_threshold_spin.setRange(0.10, 0.95)
         self.vad_threshold_spin.setSingleStep(0.05)
         self.vad_threshold_spin.setDecimals(2)
-        self.vad_threshold_spin.setValue(float(self.config.get("whisper_vad_threshold", 0.25)))
+        self.vad_threshold_spin.setValue(float(self.config.get("whisper_vad_threshold", 0.15)))
         self.vad_threshold_spin.setToolTip(
-            "VAD 阈值 0.10-0.95,越低越宽松(把'像声音的'也当人声),漏段时调低。默认 0.25"
+            "VAD 阈值 0.10-0.95,越低越宽松(把'像声音的'也当人声),漏段时调低。默认 0.15"
         )
         lf.addRow("VAD 阈值:", self.vad_threshold_spin)
 
@@ -182,6 +182,16 @@ class SettingsDialog(QDialog):
         self.vad_min_silence_spin.setValue(int(self.config.get("whisper_vad_min_silence_ms", 2000)))
         self.vad_min_silence_spin.setToolTip("连续静默 ≥ N 毫秒才切段,默认 2000")
         lf.addRow("最小静默时长:", self.vad_min_silence_spin)
+
+        self.audio_normalization_check = QCheckBox("低声对白增强(标准化送入 Whisper 的音轨)")
+        self.audio_normalization_check.setChecked(
+            bool(self.config.get("whisper_audio_normalization", True))
+        )
+        self.audio_normalization_check.setToolTip(
+            "提高较低人声音量并限制峰值,减少低声对白被跳过的情况。"
+            "极端嘈杂素材如出现噪声字幕,可关闭此选项后重试。"
+        )
+        lf.addRow("音轨增强:", self.audio_normalization_check)
 
         v.addWidget(self.local_box)
 
@@ -543,6 +553,7 @@ class SettingsDialog(QDialog):
         self.config["whisper_vad_filter"] = self.vad_filter_check.isChecked()
         self.config["whisper_vad_threshold"] = self.vad_threshold_spin.value()
         self.config["whisper_vad_min_silence_ms"] = self.vad_min_silence_spin.value()
+        self.config["whisper_audio_normalization"] = self.audio_normalization_check.isChecked()
         self.config["openai_whisper_api_key"] = self.whisper_api_key.text().strip()
         self.config["openai_whisper_base_url"] = self.whisper_api_base.text().strip()
         self.config["openai_whisper_model"] = self.whisper_api_model.text().strip()
